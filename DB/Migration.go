@@ -22,8 +22,8 @@ type WebData struct {
 
 type UsersData struct {
 	gorm.Model
-	Username   string    `json:"username"`
-	LastOnline time.Time `json:"last_online"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 func DbSqlMigration(url string) *gorm.DB {

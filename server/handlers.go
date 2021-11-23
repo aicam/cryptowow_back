@@ -2,7 +2,7 @@ package server
 
 import (
 	"encoding/hex"
-	"github.com/aicam/AlarmServer/DB"
+	"github.com/aicam/cryptowow_back/DB"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -18,8 +18,7 @@ func (s *Server) AddUser() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		newUser := context.Param("username")
 		s.DB.Save(&DB.UsersData{
-			Username:   newUser,
-			LastOnline: time.Now(),
+			Username: newUser,
 		})
 		context.JSON(http.StatusOK, Response{
 			StatusCode: 1,
@@ -31,18 +30,25 @@ func (s *Server) AddUser() gin.HandlerFunc {
 func (s *Server) GetToken() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var user DB.UsersData
-		username := context.GetHeader("username")
-		key := []byte("Ali@Kian")
-		if err := s.DB.Where(DB.UsersData{Username: username}).First(&user).Error; err != nil {
+		err := context.BindJSON(&user)
+		if err != nil {
 			context.JSON(http.StatusUnauthorized, Response{
 				StatusCode: -1,
 				Body:       "Invalid data",
 			})
 			return
 		}
-		user.LastOnline = time.Now()
-		s.DB.Save(&user)
-		token, err := DesEncrypt([]byte(username), key)
+		key := []byte("Ali@Kian")
+		if err := s.DB.Where(DB.UsersData{Username: user.Username,
+			Password: MD5(user.Password)}).First(&user).Error; err != nil {
+			context.JSON(http.StatusUnauthorized, Response{
+				StatusCode: -1,
+				Body:       "Invalid data",
+			})
+			return
+		}
+
+		token, err := DesEncrypt([]byte(user.Username), key)
 		if err != nil {
 			context.JSON(http.StatusOK, Response{
 				StatusCode: -1,

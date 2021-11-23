@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/aicam/AlarmServer/DB"
-	"github.com/aicam/AlarmServer/server"
+	"github.com/aicam/cryptowow_back/DB"
+	"github.com/aicam/cryptowow_back/server"
 	"log"
 	"net/http"
 	"os"
@@ -21,9 +21,12 @@ func main() {
 	log.Println(key)
 	if err := s.DB.Where(DB.UsersData{Username: username}).Find(&user).Error; err != nil {
 		s.DB.Save(&DB.UsersData{
-			Username:   username,
-			LastOnline: time.Now(),
+			Username: username,
+			Password: server.MD5("ali"),
 		})
+	} else {
+		user.Password = server.MD5("ali")
+		s.DB.Save(&user)
 	}
 	err := http.ListenAndServe("0.0.0.0:4300", s.Router)
 	if err != nil {

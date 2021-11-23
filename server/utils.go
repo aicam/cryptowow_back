@@ -3,12 +3,20 @@ package server
 import (
 	"bytes"
 	"crypto/des"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
 )
+
+func MD5(text string) string {
+	algorithm := md5.New()
+	algorithm.Write([]byte(text))
+	return hex.EncodeToString(algorithm.Sum(nil))
+}
 
 func convertMonthToInt(month string) int {
 	var m map[string]int
