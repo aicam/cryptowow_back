@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"github.com/aicam/cryptowow_back/DB"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -32,6 +33,7 @@ func (s *Server) GetToken() gin.HandlerFunc {
 		var user DB.UsersData
 		err := context.BindJSON(&user)
 		if err != nil {
+			log.Println(err)
 			context.JSON(http.StatusUnauthorized, Response{
 				StatusCode: -1,
 				Body:       "Invalid data",
