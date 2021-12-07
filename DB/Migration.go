@@ -22,8 +22,11 @@ type WebData struct {
 
 type UsersData struct {
 	gorm.Model
+	Email    string `json:"email"`
 	Username string `json:"username"`
 	Password string `json:"password"`
+	Wallet   string `json:"wallet"`
+	WalletID string `json:"wallet_id"`
 }
 
 func DbSqlMigration(url string) *gorm.DB {
