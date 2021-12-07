@@ -15,12 +15,19 @@ type Response struct {
 	Body       string `json:"body"`
 }
 
+func (s *Server) AvailableWallets() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		context.JSON(http.StatusOK, struct {
+			Wallets []string `json:"wallets"`
+		}{Wallets: []string{"Trust Wallet", "Bitpay"}})
+	}
+}
+
 func (s *Server) AddUser() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		newUser := context.Param("username")
-		s.DB.Save(&DB.UsersData{
-			Username: newUser,
-		})
+		var newUser DB.UsersData
+		context.BindJSON(&newUser)
+		s.DB.Save(&newUser)
 		context.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			Body:       "Added",
