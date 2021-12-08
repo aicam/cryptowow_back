@@ -26,7 +26,15 @@ func (s *Server) AvailableWallets() gin.HandlerFunc {
 func (s *Server) AddUser() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var newUser DB.UsersData
-		context.BindJSON(&newUser)
+		var existUser DB.UsersData
+		_ = context.BindJSON(&newUser)
+		if !s.DB.Where(&DB.UsersData{Username: newUser.Username}).Find(&existUser).RecordNotFound() {
+			context.JSON(http.StatusOK, Response{
+				StatusCode: 0,
+				Body:       "Username exist",
+			})
+			return
+		}
 		s.DB.Save(&newUser)
 		context.JSON(http.StatusOK, Response{
 			StatusCode: 1,
