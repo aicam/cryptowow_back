@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/hex"
 	"github.com/aicam/cryptowow_back/DB"
-	"github.com/aicam/cryptowow_back/GMReqs"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -36,8 +35,13 @@ func (s *Server) AddUser() gin.HandlerFunc {
 			})
 			return
 		}
+		newUser.Password = MD5(newUser.Password)
+		log.Println(newUser.Password)
 		s.DB.Save(&newUser)
-		GMReqs.CreateAccount(newUser.Username, newUser.Password)
+
+		// Uncomment
+		//GMReqs.CreateAccount(newUser.Username, newUser.Password)
+
 		context.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			Body:       "Added",
