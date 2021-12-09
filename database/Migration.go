@@ -1,9 +1,12 @@
-package DB
+package database
 
 import (
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/plugin/dbresolver"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -30,11 +33,19 @@ type UsersData struct {
 }
 
 func DbSqlMigration(url string) *gorm.DB {
-	db, err := gorm.Open("mysql", url)
+	db, err := gorm.Open(mysql.Open(url), &gorm.Config{})
 	if err != nil {
 		log.Println(err)
 	}
 	db.AutoMigrate(&WebData{})
 	db.AutoMigrate(&UsersData{})
+	err = db.Use(dbresolver.Register(dbresolver.Config{
+		Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "messenger_api", "characters", 1))}}, "characters").
+		Register(dbresolver.Config{
+			Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "messenger_api", "auth", 1))},
+		}, "auth"))
+	if err != nil {
+		log.Println(err)
+	}
 	return db
 }

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/aicam/cryptowow_back/DB"
+	"github.com/aicam/cryptowow_back/database"
 	"github.com/aicam/cryptowow_back/server"
 	"log"
 	"net/http"
@@ -12,15 +12,15 @@ import (
 func main() {
 	// migration
 	s := server.NewServer()
-	s.DB = DB.DbSqlMigration("aicam:021021ali@tcp(127.0.0.1:3306)/messenger_api?charset=utf8mb4&parseTime=True")
+	s.DB = database.DbSqlMigration("aicam:021021ali@tcp(127.0.0.1:3306)/messenger_api?charset=utf8mb4&parseTime=True")
 	s.Routes()
 	log.Println(time.Now())
-	var user DB.UsersData
+	var user database.UsersData
 	username := "aicam"
 	key := os.Getenv("SERVER_KEY")
 	log.Println(key)
-	if err := s.DB.Where(DB.UsersData{Username: username}).Find(&user).Error; err != nil {
-		s.DB.Save(&DB.UsersData{
+	if err := s.DB.Where(database.UsersData{Username: username}).Find(&user).Error; err != nil {
+		s.DB.Save(&database.UsersData{
 			Username: username,
 			Password: server.MD5("ali"),
 		})

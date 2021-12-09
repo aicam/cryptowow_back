@@ -2,8 +2,11 @@ package server
 
 import (
 	"encoding/hex"
-	"github.com/aicam/cryptowow_back/DB"
+	"errors"
+	"github.com/aicam/cryptowow_back/database"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+	"gorm.io/plugin/dbresolver"
 	"log"
 	"net/http"
 	"strconv"
@@ -22,13 +25,20 @@ func (s *Server) AvailableWallets() gin.HandlerFunc {
 		}{Wallets: []string{"Trust Wallet", "Bitpay"}})
 	}
 }
+func (s *Server) ReturnUserHeros() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		username := context.GetHeader("username")
+		var id int
+		s.DB.Clauses(dbresolver.Use("auth")).Raw("SELECT id from account where username='" + username + "'").Scan(&id)
 
+	}
+}
 func (s *Server) AddUser() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		var newUser DB.UsersData
-		var existUser DB.UsersData
+		var newUser database.UsersData
+		var existUser database.UsersData
 		_ = context.BindJSON(&newUser)
-		if !s.DB.Where(&DB.UsersData{Username: newUser.Username}).Find(&existUser).RecordNotFound() {
+		if err := s.DB.Where(&database.UsersData{Username: newUser.Username}).Find(&existUser).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 			context.JSON(http.StatusOK, Response{
 				StatusCode: 0,
 				Body:       "Username exist",
@@ -51,7 +61,7 @@ func (s *Server) AddUser() gin.HandlerFunc {
 
 func (s *Server) GetToken() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		var user DB.UsersData
+		var user database.UsersData
 		err := context.BindJSON(&user)
 		if err != nil {
 			log.Println(err)
@@ -62,7 +72,7 @@ func (s *Server) GetToken() gin.HandlerFunc {
 			return
 		}
 		key := []byte("Ali@Kian")
-		if err := s.DB.Where(DB.UsersData{Username: user.Username,
+		if err := s.DB.Where(database.UsersData{Username: user.Username,
 			Password: MD5(user.Password)}).First(&user).Error; err != nil {
 			context.JSON(http.StatusUnauthorized, Response{
 				StatusCode: -1,
@@ -88,7 +98,7 @@ func (s *Server) GetToken() gin.HandlerFunc {
 
 func (s *Server) AddInfo() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		var jsData DB.WebData
+		var jsData database.WebData
 		err := context.BindJSON(&jsData)
 		if err != nil {
 			context.JSON(http.StatusOK, Response{
@@ -150,7 +160,7 @@ func (s *Server) AddInfo() gin.HandlerFunc {
 
 func (s *Server) GetInfo() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		var DBData []DB.WebData
+		var DBData []database.WebData
 		offset, err := strconv.Atoi(context.Param("offset"))
 		if err != nil {
 			context.JSON(http.StatusOK, Response{

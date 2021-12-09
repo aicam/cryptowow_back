@@ -3,11 +3,12 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type Server struct {
 	DB               *gorm.DB
+	CharactersDB     *gorm.DB
 	Router           *gin.Engine
 	SocketConnection websocket.Upgrader
 }
@@ -37,7 +38,8 @@ func NewServer() *Server {
 	router.Use(CORS())
 	//go SendNotificationByTelegram("New server started in "+time.Now().String(), "Server updates")
 	return &Server{
-		DB:     nil,
-		Router: router,
+		DB:           nil,
+		Router:       router,
+		CharactersDB: nil,
 	}
 }

@@ -1,40 +1,27 @@
 package main
 
 import (
-	"bytes"
-	bs64 "encoding/base64"
-	"io/ioutil"
+	"github.com/aicam/cryptowow_back/database"
+	"github.com/aicam/cryptowow_back/server"
+	"gorm.io/plugin/dbresolver"
 	"log"
-	"net/http"
-	"strings"
 )
 
+type Hero struct {
+	Name   string
+	Race   bool
+	Gender bool
+	Level  int
+}
+
 func main() {
-	client := &http.Client{}
-	file, err := ioutil.ReadFile("test/TC_SOAP")
-	if err != nil {
-		log.Println(err)
-	}
-	authorization := "Basic " + bs64.StdEncoding.EncodeToString([]byte("ali:ali"))
-	log.Println(authorization)
-	reqBody := strings.Replace(string(file), "GMCommand", "character level Testm 80", 1)
-	//log.Println(reqBody)
-	req, err := http.NewRequest("POST", "http://127.0.0.1:7878", bytes.NewBufferString(reqBody))
-	if err != nil {
-		log.Println(err)
-	}
-	req.SetBasicAuth("ali", "ali")
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Println(err)
-	}
-	f, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Println(err)
-	}
-	resp.Body.Close()
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println(string(f))
+	// migration
+	s := server.NewServer()
+	s.DB = database.DbSqlMigration("aicam:021021ali@tcp(127.0.0.1:3306)/messenger_api?charset=utf8mb4&parseTime=True")
+	var hero Hero
+	var id int
+	s.DB.Clauses(dbresolver.Use("auth")).Raw("SELECT id from account where username='ALI'").Scan(&id)
+	log.Println(id)
+	s.DB.Raw("SELECT name, race, gender, level FROM characters").Scan(&hero)
+	log.Print(hero)
 }
