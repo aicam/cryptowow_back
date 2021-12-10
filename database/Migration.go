@@ -32,6 +32,16 @@ type UsersData struct {
 	WalletID string `json:"wallet_id"`
 }
 
+type Gifts struct {
+	gorm.Model
+	Username     string `json:"username"`
+	Description  string `json:"description"`
+	Action       string `json:"action"`
+	Condition    string `json:"condition"`
+	Used         bool   `json:"used"`
+	UsedHeroName string `json:"used_hero_name"`
+}
+
 func DbSqlMigration(url string) *gorm.DB {
 	db, err := gorm.Open(mysql.Open(url), &gorm.Config{})
 	if err != nil {
@@ -39,6 +49,7 @@ func DbSqlMigration(url string) *gorm.DB {
 	}
 	db.AutoMigrate(&WebData{})
 	db.AutoMigrate(&UsersData{})
+	db.AutoMigrate(&Gifts{})
 	err = db.Use(dbresolver.Register(dbresolver.Config{
 		Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "messenger_api", "characters", 1))}}, "characters").
 		Register(dbresolver.Config{

@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -25,12 +26,24 @@ func (s *Server) AvailableWallets() gin.HandlerFunc {
 		}{Wallets: []string{"Trust Wallet", "Bitpay"}})
 	}
 }
-func (s *Server) ReturnUserHeros() gin.HandlerFunc {
+
+func (s *Server) ReturnUserInfo() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		username := context.GetHeader("username")
 		var id int
-		s.DB.Clauses(dbresolver.Use("auth")).Raw("SELECT id from account where username='" + username + "'").Scan(&id)
+		log.Println("SELECT id from account where username='" + strings.ToUpper(username) + "'")
+		s.DB.Clauses(dbresolver.Use("auth")).Raw("SELECT id from account WHERE username='" + strings.ToUpper(username) + "'").Scan(&id)
+		var heros []Hero
+		s.DB.Raw("SELECT name, race, gender, level, class FROM characters WHERE account=" + strconv.Itoa(id)).Scan(&heros)
 
+		var gifts []database.Gifts
+		s.DB.Where(&database.Gifts{
+			Username: username,
+		}).Find(&gifts)
+		context.JSON(http.StatusOK, struct {
+			Heros []Hero           `json:"heros"`
+			Gifts []database.Gifts `json:"gifts"`
+		}{Heros: heros, Gifts: gifts})
 	}
 }
 func (s *Server) AddUser() gin.HandlerFunc {
@@ -45,6 +58,15 @@ func (s *Server) AddUser() gin.HandlerFunc {
 			})
 			return
 		}
+		gift := database.Gifts{
+			Username:     newUser.Username,
+			Description:  "Level up first hero free!",
+			Action:       "lvlup",
+			Condition:    "Register",
+			Used:         false,
+			UsedHeroName: "",
+		}
+		s.DB.Save(&gift)
 		newUser.Password = MD5(newUser.Password)
 		log.Println(newUser.Password)
 		s.DB.Save(&newUser)
