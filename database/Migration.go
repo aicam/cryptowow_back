@@ -51,6 +51,7 @@ func DbSqlMigration(url string) *gorm.DB {
 	db.AutoMigrate(&UsersData{})
 	db.AutoMigrate(&Gifts{})
 	db.AutoMigrate(&Wallet{})
+	db.AutoMigrate(&Transaction{})
 	err = db.Use(dbresolver.Register(dbresolver.Config{
 		Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "messenger_api", "characters", 1))}}, "characters").
 		Register(dbresolver.Config{

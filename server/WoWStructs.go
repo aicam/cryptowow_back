@@ -7,3 +7,6 @@ type Hero struct {
 	Level  int    `json:"level"`
 	Class  int    `json:"class"`
 }
+
+type Home struct {
+}

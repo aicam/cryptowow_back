@@ -9,3 +9,13 @@ type Wallet struct {
 	CurrencyID string `json:"currency_id"`
 	Amount     int    `json:"amount"`
 }
+
+type Transaction struct {
+	gorm.Model
+	// same as username
+	WalletName string `json:"wallet_name"`
+	CurrencyID string `json:"currency_id"`
+	Amount     int    `json:"amount"`
+	HashCode   string `json:"hash_code"`
+	Used       int    `json:"used"`
+}

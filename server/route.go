@@ -8,4 +8,6 @@ func (s *Server) Routes() {
 	s.Router.POST("/register", s.AddUser())
 	// Login required (WoW DB)
 	s.Router.GET("/wow/get_info", s.checkToken(), s.ReturnUserInfo())
+	// Wallet
+	s.Router.GET("/wallet/get_info", s.checkToken(), s.GetWalletInfo())
 }

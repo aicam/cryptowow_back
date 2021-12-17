@@ -40,10 +40,16 @@ func (s *Server) ReturnUserInfo() gin.HandlerFunc {
 		s.DB.Where(&database.Gifts{
 			Username: username,
 		}).Find(&gifts)
+
+		currencies := WalletCurrencies()
+		var wallets []database.Wallet
+		s.DB.Where(&database.Wallet{Name: username}).Find(&wallets)
 		context.JSON(http.StatusOK, struct {
-			Heros []Hero           `json:"heros"`
-			Gifts []database.Gifts `json:"gifts"`
-		}{Heros: heros, Gifts: gifts})
+			Heros      []Hero            `json:"heros"`
+			Gifts      []database.Gifts  `json:"gifts"`
+			Wallets    []database.Wallet `json:"wallets"`
+			Currencies []string          `json:"currencies"`
+		}{Heros: heros, Gifts: gifts, Wallets: wallets, Currencies: currencies})
 	}
 }
 func (s *Server) AddUser() gin.HandlerFunc {
