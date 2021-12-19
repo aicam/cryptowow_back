@@ -16,8 +16,7 @@ type HeroInfo struct {
 	Level          int             `json:"level"`
 	Class          int             `json:"class"`
 	EquipmentCache string          `json:"equipment_cache" gorm:"column:equipmentCache"`
-	EquippedItems  []uint          `json:"equipped_items"`
-	ItemIcon       map[uint]string `json:"item_icon"`
+	Items          map[uint]string `json:"items"`
 }
 
 type HeroPosition struct {
