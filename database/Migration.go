@@ -56,7 +56,9 @@ func DbSqlMigration(url string) *gorm.DB {
 		Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "messenger_api", "characters", 1))}}, "characters").
 		Register(dbresolver.Config{
 			Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "messenger_api", "auth", 1))},
-		}, "auth"))
+		}, "auth").Register(dbresolver.Config{
+		Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "messenger_api", "wowhead", 1))},
+	}))
 	if err != nil {
 		log.Println(err)
 	}

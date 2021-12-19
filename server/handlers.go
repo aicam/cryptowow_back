@@ -22,7 +22,10 @@ type Response struct {
 func (s *Server) ReturnHeroInfo() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		heroName := context.Param("hero_name")
+		var heroInfo HeroInfo
+		s.DB.Clauses(dbresolver.Use("characters")).Raw("SELECT guid, name, race, gender, level, class, equipmentCache FROM characters WHERE name='" + heroName + "'").Scan(&heroInfo)
 
+		context.JSON(http.StatusOK, heroInfo)
 	}
 }
 
