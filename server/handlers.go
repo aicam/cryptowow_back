@@ -19,6 +19,13 @@ type Response struct {
 	Body       string `json:"body"`
 }
 
+func (s *Server) ReturnHeroInfo() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		heroName := context.Param("hero_name")
+
+	}
+}
+
 func (s *Server) AvailableWallets() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		context.JSON(http.StatusOK, struct {
@@ -93,18 +100,18 @@ func (s *Server) GetToken() gin.HandlerFunc {
 		err := context.BindJSON(&user)
 		if err != nil {
 			log.Println(err)
-			context.JSON(http.StatusUnauthorized, Response{
+			context.JSON(http.StatusOK, Response{
 				StatusCode: -1,
-				Body:       "Invalid data",
+				Body:       "Invalid credentials",
 			})
 			return
 		}
 		key := []byte("Ali@Kian")
 		if err := s.DB.Where(database.UsersData{Username: user.Username,
 			Password: MD5(user.Password)}).First(&user).Error; err != nil {
-			context.JSON(http.StatusUnauthorized, Response{
+			context.JSON(http.StatusOK, Response{
 				StatusCode: -1,
-				Body:       "Invalid data",
+				Body:       "Invalid credentials",
 			})
 			return
 		}

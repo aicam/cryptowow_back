@@ -7,6 +7,17 @@ type Hero struct {
 	Level  int    `json:"level"`
 	Class  int    `json:"class"`
 }
+
+type HeroInfo struct {
+	ID             uint   `json:"id"`
+	Name           string `json:"name"`
+	Race           uint   `json:"race"`
+	Gender         bool   `json:"gender"`
+	Level          int    `json:"level"`
+	Class          int    `json:"class"`
+	EquipmentCache string `json:"equipment_cache"`
+}
+
 type HeroPosition struct {
 	Map       uint    `json:"map"`
 	PositionX float32 `json:"position_x"`
