@@ -24,6 +24,7 @@ func (s *Server) ReturnHeroInfo() gin.HandlerFunc {
 		heroName := context.Param("hero_name")
 		var heroInfo HeroInfo
 		s.DB.Clauses(dbresolver.Use("characters")).Raw("SELECT guid, name, race, gender, level, class, equipmentCache FROM characters WHERE name='" + heroName + "'").Scan(&heroInfo)
+		s.DB.Clauses(dbresolver.Use("characters")).Raw("SELECT achievement FROM character_achievement WHERE guid=" + strconv.Itoa(heroInfo.ID)).Scan(&heroInfo)
 		context.JSON(http.StatusOK, heroInfo)
 	}
 }
