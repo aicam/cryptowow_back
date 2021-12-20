@@ -9,14 +9,15 @@ type Hero struct {
 }
 
 type HeroInfo struct {
-	ID             int     `json:"id" gorm:"column:guid"`
-	Name           string  `json:"name"`
-	Race           uint    `json:"race"`
-	Gender         bool    `json:"gender"`
-	Level          int     `json:"level"`
-	Class          int     `json:"class"`
-	EquipmentCache string  `json:"equipment_cache" gorm:"column:equipmentCache"`
-	Achievements   []uint8 `json:"achievements" gorm:"column:achievement"`
+	ID             int                      `json:"id" gorm:"column:guid"`
+	Name           string                   `json:"name"`
+	Race           uint                     `json:"race"`
+	Gender         bool                     `json:"gender"`
+	Level          int                      `json:"level"`
+	Class          int                      `json:"class"`
+	EquipmentCache string                   `json:"equipment_cache" gorm:"column:equipmentCache"`
+	Achievements   []string                 `json:"achievements" gorm:"column:achievement"`
+	Reputations    []map[string]interface{} `json:"reputations"`
 }
 
 type HeroPosition struct {
