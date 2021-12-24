@@ -19,12 +19,18 @@ func actionResult(statusCode int, body string) struct {
 	}{Status: statusCode, Body: body}
 }
 
-func checkHeroIsOnline(c *gin.Context, DB *gorm.DB, heroName string) (Hero, bool) {
+func checkHeroIsOnline(c *gin.Context, DB *gorm.DB, heroName string, username string) (Hero, bool) {
 	var hero Hero
-	err := DB.Clauses(dbresolver.Use("characters")).Raw("SELECT guid, race, online from characters WHERE name='" + heroName + "'").First(&hero).Error
+	var accID int
+	DB.Clauses(dbresolver.Use("auth")).Raw("SELECT id FROM account WHERE username='" + username + "'").Scan(&accID)
+	log.Println(accID)
+	err := DB.Clauses(dbresolver.Use("characters")).Raw("SELECT account, race, online from characters WHERE name='" + heroName + "'").First(&hero).Error
 	if err != nil {
-		log.Print(err)
 		c.JSON(http.StatusOK, actionResult(-3, "Malicious activity detected"))
+		return hero, false
+	}
+	if hero.AccountID != accID {
+		c.JSON(http.StatusOK, actionResult(-8, "Malicious activity detected"))
 		return hero, false
 	}
 	if hero.Online {
@@ -37,7 +43,8 @@ func checkHeroIsOnline(c *gin.Context, DB *gorm.DB, heroName string) (Hero, bool
 func (s *Server) RestoreHero() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		heroName := context.Param("hero_name")
-		hero, err := checkHeroIsOnline(context, s.DB, heroName)
+		username := context.GetHeader("username")
+		hero, err := checkHeroIsOnline(context, s.DB, heroName, username)
 		if !err {
 			return
 		}

@@ -1,7 +1,7 @@
 package server
 
 type Hero struct {
-	AccountID int    `json:"account_id" gorm:"column:guid"`
+	AccountID int    `json:"account_id" gorm:"column:account"`
 	Name      string `json:"name"`
 	Race      uint   `json:"race"`
 	Gender    bool   `json:"gender"`
