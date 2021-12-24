@@ -1,11 +1,13 @@
 package server
 
 type Hero struct {
-	Name   string `json:"name"`
-	Race   uint   `json:"race"`
-	Gender bool   `json:"gender"`
-	Level  int    `json:"level"`
-	Class  int    `json:"class"`
+	AccountID int    `json:"account_id" gorm:"column:guid"`
+	Name      string `json:"name"`
+	Race      uint   `json:"race"`
+	Gender    bool   `json:"gender"`
+	Level     int    `json:"level"`
+	Class     int    `json:"class"`
+	Online    bool   `json:"online"`
 }
 
 type HeroInfo struct {
@@ -22,6 +24,7 @@ type HeroInfo struct {
 		ID   string `json:"id"`
 		Name string `json:"name"`
 	} `json:"mounts"`
+	Pets []string `json:"pets"`
 }
 
 type MountsInfo struct {
@@ -45,7 +48,7 @@ type CompanionsInfo struct {
 }
 
 type HeroPosition struct {
-	Map       uint    `json:"map"`
+	Map       int     `json:"map"`
 	PositionX float32 `json:"position_x"`
 	PositionY float32 `json:"position_y"`
 	PositionZ float32 `json:"position_z"`

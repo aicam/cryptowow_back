@@ -1,11 +1,8 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
+	"strconv"
 )
 
 type Hero struct {
@@ -33,26 +30,27 @@ type CompanionsInfo struct {
 }
 
 func main() {
-	// Open our jsonFile
-	jsonFile, err := os.Open("WoWUtils/companions_info.json")
-	// if we os.Open returns an error then handle it
-	if err != nil {
-		fmt.Println(err)
-	}
-	// defer the closing of our jsonFile so that we can parse it later on
-	defer jsonFile.Close()
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-
-	var mounts CompanionsInfo
-	_ = json.Unmarshal(byteValue, &mounts)
-	expr := "("
-	for _, dt := range mounts.Data {
-		if dt.SpellID != "0" {
-			expr += dt.SpellID + ", "
-		}
-	}
-	expr = expr[:len(expr)-2]
-	expr += ")"
-	log.Print(expr)
+	//// Open our jsonFile
+	//jsonFile, err := os.Open("WoWUtils/companions_info.json")
+	//// if we os.Open returns an error then handle it
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+	//// defer the closing of our jsonFile so that we can parse it later on
+	//defer jsonFile.Close()
+	//byteValue, _ := ioutil.ReadAll(jsonFile)
+	//
+	//var mounts CompanionsInfo
+	//_ = json.Unmarshal(byteValue, &mounts)
+	//expr := "("
+	//for _, dt := range mounts.Data {
+	//	if dt.SpellID != "0" {
+	//		expr += dt.SpellID + ", "
+	//	}
+	//}
+	//expr = expr[:len(expr)-2]
+	//expr += ")"
+	//log.Print(expr)
+	log.Print(strconv.FormatFloat(3.12345678, 'f', 3, 64))
 
 }

@@ -47,6 +47,7 @@ func NewServer() *Server {
 	if err != nil {
 		log.Println(err)
 	}
+	// TODO: clean up reading files
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
 	byteValue, _ := ioutil.ReadAll(jsonFile)
@@ -59,8 +60,16 @@ func NewServer() *Server {
 		os.Exit(-1)
 	}
 
-	var mounts MountsInfo
-	err = json.Unmarshal(byteValue, &mounts)
+	jsonFile, err = os.Open("WoWUtils/companions_info.json")
+	if err != nil {
+		log.Println(err)
+	}
+	// defer the closing of our jsonFile so that we can parse it later on
+	defer jsonFile.Close()
+	byteValue, _ = ioutil.ReadAll(jsonFile)
+
+	var companions CompanionsInfo
+	err = json.Unmarshal(byteValue, &companions)
 
 	if err != nil {
 		log.Print(err)
@@ -68,8 +77,11 @@ func NewServer() *Server {
 	}
 
 	return &Server{
-		DB:      nil,
-		Router:  router,
-		WoWInfo: struct{ Mounts MountsInfo }{Mounts: mounts},
+		DB:     nil,
+		Router: router,
+		WoWInfo: struct {
+			Mounts     MountsInfo
+			Companions CompanionsInfo
+		}{Mounts: mounts, Companions: companions},
 	}
 }
