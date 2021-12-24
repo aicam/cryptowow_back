@@ -27,6 +27,16 @@ func (s *Server) ReturnHeroInfo() gin.HandlerFunc {
 		s.DB.Clauses(dbresolver.Use("characters")).Raw("SELECT achievement FROM character_achievement WHERE guid=" + strconv.Itoa(heroInfo.ID)).Find(&heroInfo.Achievements)
 		s.DB.Clauses(dbresolver.Use("characters")).Raw("SELECT faction, standing FROM character_reputation WHERE guid='" + strconv.Itoa(heroInfo.ID) +
 			"' AND faction in (1106, 1052, 1090, 1098, 1156, 1073, 1119, 1091)").Find(&heroInfo.Reputations)
+		var heroMounts []string
+		s.DB.Clauses(dbresolver.Use("characters")).Raw("SELECT spell FROM character_spell WHERE guid=" + strconv.Itoa(heroInfo.ID)).Find(&heroMounts)
+		for _, mount := range s.WoWInfo.Mounts.Data {
+			if stringInSlice(mount.SpellID, heroMounts) {
+				heroInfo.Mounts = append(heroInfo.Mounts, struct {
+					ID   string `json:"id"`
+					Name string `json:"name"`
+				}{ID: mount.ID, Name: mount.Name})
+			}
+		}
 		//heroInfo.Achievements = string(achievements.Achievement)
 		context.JSON(http.StatusOK, heroInfo)
 	}

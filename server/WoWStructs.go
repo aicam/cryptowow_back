@@ -18,6 +18,30 @@ type HeroInfo struct {
 	EquipmentCache string                   `json:"equipment_cache" gorm:"column:equipmentCache"`
 	Achievements   []string                 `json:"achievements" gorm:"column:achievement"`
 	Reputations    []map[string]interface{} `json:"reputations"`
+	Mounts         []struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"mounts"`
+}
+
+type MountsInfo struct {
+	Type     string `json:"type"`
+	Name     string `json:"name"`
+	Database string `json:"database"`
+	SqlExpr  string `json:"sql_expr"`
+	Data     []struct {
+		ID      string `json:"entry"`
+		Name    string `json:"name"`
+		SpellID string `json:"spellid_2"`
+	}
+}
+
+type CompanionsInfo struct {
+	SqlExpr string `json:"sql_expr"`
+	Data    []struct {
+		ID      string `json:"entry"`
+		SpellID string `json:"spellid_2"`
+	}
 }
 
 type HeroPosition struct {

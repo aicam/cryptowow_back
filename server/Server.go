@@ -1,16 +1,23 @@
 package server
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
+	"io/ioutil"
+	"log"
+	"os"
 )
 
 type Server struct {
 	DB               *gorm.DB
-	CharactersDB     *gorm.DB
 	Router           *gin.Engine
 	SocketConnection websocket.Upgrader
+	WoWInfo          struct {
+		Mounts     MountsInfo
+		Companions CompanionsInfo
+	}
 }
 
 func CORS() gin.HandlerFunc {
@@ -36,10 +43,33 @@ func NewServer() *Server {
 	router := gin.Default()
 	// here we opened cors for all
 	router.Use(CORS())
-	//go SendNotificationByTelegram("New server started in "+time.Now().String(), "Server updates")
+	jsonFile, err := os.Open("WoWUtils/mounts_info.json")
+	if err != nil {
+		log.Println(err)
+	}
+	// defer the closing of our jsonFile so that we can parse it later on
+	defer jsonFile.Close()
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	var mounts MountsInfo
+	err = json.Unmarshal(byteValue, &mounts)
+
+	if err != nil {
+		log.Print(err)
+		os.Exit(-1)
+	}
+
+	var mounts MountsInfo
+	err = json.Unmarshal(byteValue, &mounts)
+
+	if err != nil {
+		log.Print(err)
+		os.Exit(-1)
+	}
+
 	return &Server{
-		DB:           nil,
-		Router:       router,
-		CharactersDB: nil,
+		DB:      nil,
+		Router:  router,
+		WoWInfo: struct{ Mounts MountsInfo }{Mounts: mounts},
 	}
 }
