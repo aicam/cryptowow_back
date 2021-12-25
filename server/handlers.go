@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type Response struct {
@@ -64,6 +63,9 @@ func (s *Server) ReturnUserInfo() gin.HandlerFunc {
 		var heros []Hero
 		s.DB.Raw("SELECT name, race, gender, level, class FROM characters WHERE account=" + strconv.Itoa(id)).Scan(&heros)
 
+		var sellingHeros []database.SellingHeros
+		s.DB.Where(&database.SellingHeros{Username: username}).Find(&sellingHeros)
+
 		var gifts []database.Gifts
 		s.DB.Where(&database.Gifts{
 			Username: username,
@@ -73,11 +75,12 @@ func (s *Server) ReturnUserInfo() gin.HandlerFunc {
 		var wallets []database.Wallet
 		s.DB.Where(&database.Wallet{Name: username}).Find(&wallets)
 		context.JSON(http.StatusOK, struct {
-			Heros      []Hero            `json:"heros"`
-			Gifts      []database.Gifts  `json:"gifts"`
-			Wallets    []database.Wallet `json:"wallets"`
-			Currencies []string          `json:"currencies"`
-		}{Heros: heros, Gifts: gifts, Wallets: wallets, Currencies: currencies})
+			Heros        []Hero                  `json:"heros"`
+			Gifts        []database.Gifts        `json:"gifts"`
+			Wallets      []database.Wallet       `json:"wallets"`
+			Currencies   []string                `json:"currencies"`
+			SellingHeros []database.SellingHeros `json:"selling_heros"`
+		}{Heros: heros, Gifts: gifts, Wallets: wallets, Currencies: currencies, SellingHeros: sellingHeros})
 	}
 }
 func (s *Server) AddUser() gin.HandlerFunc {
@@ -149,83 +152,5 @@ func (s *Server) GetToken() gin.HandlerFunc {
 			StatusCode: 1,
 			Body:       hex.EncodeToString(token),
 		})
-	}
-}
-
-func (s *Server) AddInfo() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		var jsData database.WebData
-		err := context.BindJSON(&jsData)
-		if err != nil {
-			context.JSON(http.StatusOK, Response{
-				StatusCode: -1,
-				Body:       err.Error(),
-			})
-			return
-		}
-		username := context.GetHeader("username")
-		_ = "2006-01-02T15:04:05Z07:00"
-		if jsData.ArmeniaTime.Year() != 1 {
-			go sendNotificationByPushOver(jsData.ArmeniaTxt, "Armenia Time found")
-			go sendNotificationByIFTTT(jsData.ArmeniaTxt, "Armenia Time found")
-			go SendNotificationByTelegram(jsData.ArmeniaTxt, "Armenia Time found")
-		}
-		if jsData.DubaiTime.Month() >= 8 {
-			go sendNotificationByPushOver(jsData.DubaiTxt, "Dubai Time found")
-			go sendNotificationByIFTTT(jsData.DubaiTxt, "Dubai Time found")
-			go SendNotificationByTelegram(jsData.DubaiTxt, "Dubai Time found")
-		}
-		if jsData.TurkeyTime.Year() != 1 {
-			go sendNotificationByPushOver(jsData.DubaiTxt, "Dubai Time found")
-			go sendNotificationByIFTTT(jsData.DubaiTxt, "Dubai Time found")
-			go SendNotificationByTelegram(jsData.DubaiTxt, "Dubai Time found")
-		}
-		if jsData.DubaiTime.Year() == 1 {
-			jsData.DubaiTime = time.Now()
-		}
-		if jsData.TurkeyTime.Year() == 1 {
-			jsData.TurkeyTime = time.Now()
-		}
-		if jsData.ArmeniaTime.Year() == 1 {
-			jsData.ArmeniaTime = time.Now()
-		}
-		//if jsData.Priority >= 0 {
-		//	timeFounded, err := time.Parse(layout, jsData.ClosestDate)
-		//	if err != nil {
-		//		context.JSON(http.StatusOK, Response{
-		//			StatusCode: -1,
-		//			Body:       err.Error(),
-		//		})
-		//		return
-		//	}
-		//	if jsData.Priority > 0 {
-		//		log.Print(strconv.Itoa(int(timeFounded.Sub(time.Now()).Hours() / 24)))
-		//		go sendNotificationByPushOver("In "+timeFounded.Month().String()+" "+strconv.Itoa(timeFounded.Day()), "Time found in "+
-		//			strconv.Itoa(int(timeFounded.Sub(time.Now()).Hours()/24))+" days"+" in "+jsData.Country)
-		//	}
-		//}
-
-		jsData.Username = username
-		s.DB.Save(&jsData)
-		context.JSON(http.StatusOK, Response{
-			StatusCode: 1,
-			Body:       "Data saved successfully!",
-		})
-	}
-}
-
-func (s *Server) GetInfo() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		var DBData []database.WebData
-		offset, err := strconv.Atoi(context.Param("offset"))
-		if err != nil {
-			context.JSON(http.StatusOK, Response{
-				StatusCode: -1,
-				Body:       err.Error(),
-			})
-			return
-		}
-		s.DB.Find(&DBData)
-		context.JSON(http.StatusOK, DBData[len(DBData)-offset:])
 	}
 }

@@ -1,13 +1,17 @@
 package server
 
 type Hero struct {
-	AccountID int    `json:"account_id" gorm:"column:account"`
-	Name      string `json:"name"`
-	Race      uint   `json:"race"`
-	Gender    bool   `json:"gender"`
-	Level     int    `json:"level"`
-	Class     int    `json:"class"`
-	Online    bool   `json:"online"`
+	AccountID  int    `json:"account_id" gorm:"column:account"`
+	HeroID     int    `json:"hero_id" gorm:"column:guid"`
+	Name       string `json:"name"`
+	Race       uint   `json:"race"`
+	Gender     bool   `json:"gender"`
+	Level      int    `json:"level"`
+	Class      int    `json:"class"`
+	Online     bool   `json:"online"`
+	Money      int    `json:"money"`
+	TotalTime  int    `json:"total_time" gorm:"column:totaltime"`
+	TotalKills int    `json:"total_kills" gorm:"column:totalKills"`
 }
 
 type HeroInfo struct {
