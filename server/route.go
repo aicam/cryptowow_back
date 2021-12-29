@@ -8,8 +8,11 @@ func (s *Server) Routes() {
 	s.Router.GET("/wow/get_info", s.checkToken(), s.ReturnUserInfo())
 	s.Router.GET("/wow/hero_info/:hero_name", s.checkToken(), s.ReturnHeroInfo())
 	s.Router.GET("/wow/restore_hero/:hero_name", s.checkToken(), s.RestoreHero())
+	// Hero selling functionality
 	s.Router.POST("/wow/sell_hero", s.checkToken(), s.SellHero())
-
+	s.Router.GET("/wow/cancel_selling_hero/:hero_name", s.checkToken(), s.CancellSellingHero())
+	s.Router.GET("/wow/selling_heros", s.checkToken(), s.ReturnSellingHeros())
+	s.Router.POST("/wow/buy_hero", s.checkToken(), s.BuyHero())
 	// Wallet
-	s.Router.GET("/wallet/get_info", s.checkToken(), s.GetWalletInfo())
+
 }

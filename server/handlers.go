@@ -14,7 +14,7 @@ import (
 )
 
 type Response struct {
-	StatusCode int    `json:"status_code"`
+	StatusCode int    `json:"status"`
 	Body       string `json:"body"`
 }
 
@@ -58,7 +58,6 @@ func (s *Server) ReturnUserInfo() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		username := context.GetHeader("username")
 		var id int
-		log.Println("SELECT id from account where username='" + strings.ToUpper(username) + "'")
 		s.DB.Clauses(dbresolver.Use("auth")).Raw("SELECT id from account WHERE username='" + strings.ToUpper(username) + "'").Scan(&id)
 		var heros []Hero
 		s.DB.Raw("SELECT name, race, gender, level, class FROM characters WHERE account=" + strconv.Itoa(id)).Scan(&heros)
@@ -80,7 +79,8 @@ func (s *Server) ReturnUserInfo() gin.HandlerFunc {
 			Wallets      []database.Wallet       `json:"wallets"`
 			Currencies   []string                `json:"currencies"`
 			SellingHeros []database.SellingHeros `json:"selling_heros"`
-		}{Heros: heros, Gifts: gifts, Wallets: wallets, Currencies: currencies, SellingHeros: sellingHeros})
+			Username     string                  `json:"username"`
+		}{Heros: heros, Gifts: gifts, Wallets: wallets, Currencies: currencies, SellingHeros: sellingHeros, Username: username})
 	}
 }
 func (s *Server) AddUser() gin.HandlerFunc {
@@ -115,6 +115,47 @@ func (s *Server) AddUser() gin.HandlerFunc {
 			StatusCode: 1,
 			Body:       "Added",
 		})
+	}
+}
+
+func (s *Server) BuyHero() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		username := context.GetHeader("username")
+		var buyingHero struct {
+			HeroInfo         database.SellingHeros `json:"hero_info"`
+			SelectedCurrency string                `json:"selected_currency"`
+		}
+		var testBuyingHero database.SellingHeros
+		err := context.BindJSON(&buyingHero)
+		if err != nil || buyingHero.HeroInfo.HeroID == 0 {
+			context.JSON(http.StatusOK, Response{
+				StatusCode: -1,
+				Body:       "Invalid request",
+			})
+			return
+		}
+		err = s.DB.Where(&buyingHero.HeroInfo).First(&testBuyingHero).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			context.JSON(http.StatusOK, Response{
+				StatusCode: -3,
+				Body:       "Malicious activity detected",
+			})
+			return
+		}
+		var id int
+		s.DB.Clauses(dbresolver.Use("auth")).Raw("SELECT id from account WHERE username='" + strings.ToUpper(username) + "'").Scan(&id)
+		err = SetBuyHeroTransaction(username, testBuyingHero.HeroName, buyingHero.SelectedCurrency, testBuyingHero.Price, s.DB)
+		if err != nil {
+			context.JSON(http.StatusOK, Response{
+				StatusCode: -1,
+				Body:       err.Error(),
+			})
+			return
+		}
+		s.DB.Clauses(dbresolver.Use("characters")).Raw("UPDATE characters SET account=" + strconv.Itoa(id) + " WHERE guid=" +
+			strconv.Itoa(testBuyingHero.HeroID))
+		s.DB.Delete(testBuyingHero)
+
 	}
 }
 

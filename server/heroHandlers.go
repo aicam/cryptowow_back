@@ -126,3 +126,12 @@ func (s *Server) CancellSellingHero() gin.HandlerFunc {
 		context.JSON(http.StatusOK, actionResult(1, "Selling canceled"))
 	}
 }
+
+func (s *Server) ReturnSellingHeros() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		var sellingheros []database.SellingHeros
+		s.DB.Find(&sellingheros)
+		log.Println(sellingheros)
+		context.JSON(http.StatusOK, sellingheros)
+	}
+}
