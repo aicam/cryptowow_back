@@ -144,7 +144,7 @@ func (s *Server) BuyHero() gin.HandlerFunc {
 		}
 		var id int
 		s.DB.Clauses(dbresolver.Use("auth")).Raw("SELECT id from account WHERE username='" + strings.ToUpper(username) + "'").Scan(&id)
-		err = SetBuyHeroTransaction(username, buyingHero.SelectedCurrency, testBuyingHero.Price, s.DB)
+		err = SetBuyHeroTransaction(username, buyingHero.HeroInfo.Username, buyingHero.SelectedCurrency, testBuyingHero.Price, s.DB)
 		if err != nil {
 			context.JSON(http.StatusOK, Response{
 				StatusCode: -1,
@@ -152,9 +152,12 @@ func (s *Server) BuyHero() gin.HandlerFunc {
 			})
 			return
 		}
-		s.DB.Clauses(dbresolver.Use("characters")).Raw("UPDATE characters SET account=" + strconv.Itoa(id) + " WHERE guid=" +
-			strconv.Itoa(testBuyingHero.HeroID))
-		s.DB.Delete(testBuyingHero)
+		err = s.DB.Clauses(dbresolver.Use("characters")).Exec("UPDATE characters SET account=" + strconv.Itoa(id) + " WHERE guid=" +
+			strconv.Itoa(testBuyingHero.HeroID)).Error
+		if err != nil {
+			log.Println("Update account id err: ", err)
+		}
+		s.DB.Delete(&testBuyingHero)
 		context.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			Body:       "Hero transferred to " + username + " account",

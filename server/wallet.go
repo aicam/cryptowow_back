@@ -4,7 +4,6 @@ import (
 	"errors"
 	"github.com/aicam/cryptowow_back/database"
 	"gorm.io/gorm"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -13,7 +12,7 @@ func WalletCurrencies() []string {
 	return []string{"Ethereum", "CWT"}
 }
 
-func SetBuyHeroTransaction(username, selectedCurrency, price string, DB *gorm.DB) error {
+func SetBuyHeroTransaction(username, vendorUsername, selectedCurrency, price string, DB *gorm.DB) error {
 	var wallets []database.Wallet
 	DB.Where(&database.Wallet{Name: username}).Find(&wallets)
 	prices := strings.Split(price, "&")
@@ -25,12 +24,10 @@ func SetBuyHeroTransaction(username, selectedCurrency, price string, DB *gorm.DB
 	}
 	var connectedWallet database.Wallet
 	for i := 0; i < len(wallets); i++ {
-		log.Println(wallets[i].CurrencyID, selectedCurrency, wallets[i].CurrencyID == selectedCurrency)
 		if wallets[i].CurrencyID == selectedCurrency {
 			connectedWallet = wallets[i]
 		}
 	}
-	log.Print(connectedWallet)
 	if (database.Wallet{}) == connectedWallet {
 		return errors.New("Not enough balance")
 	}
@@ -38,7 +35,15 @@ func SetBuyHeroTransaction(username, selectedCurrency, price string, DB *gorm.DB
 		return errors.New("Not enough balance")
 	}
 	connectedWallet.Amount -= priceVal
-	// TODO: add amount to vendor
+	var vendorWallet database.Wallet
+	err := DB.Where(&database.Wallet{Name: vendorUsername, CurrencyID: connectedWallet.CurrencyID}).First(&vendorWallet).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		vendorWallet.CurrencyID = connectedWallet.CurrencyID
+		vendorWallet.Name = vendorUsername
+		vendorWallet.Amount = 0.0
+	}
+	vendorWallet.Amount += priceVal
+	DB.Save(&vendorWallet)
 	DB.Save(&connectedWallet)
 	return nil
 }

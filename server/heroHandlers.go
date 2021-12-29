@@ -57,11 +57,11 @@ func (s *Server) RestoreHero() gin.HandlerFunc {
 		default:
 			heroHomeLoc = Home.Alliance
 		}
-		s.DB.Clauses(dbresolver.Use("characters")).Raw("UPDATE characters SET " +
+		s.DB.Clauses(dbresolver.Use("characters")).Exec("UPDATE characters SET " +
 			"map=" + strconv.Itoa(heroHomeLoc.Map) + "," +
 			"position_x=" + strconv.FormatFloat(float64(heroHomeLoc.PositionX), 'f', 4, 64) + "," +
 			"position_y=" + strconv.FormatFloat(float64(heroHomeLoc.PositionY), 'f', 4, 64) + "," +
-			"position_z=" + strconv.FormatFloat(float64(heroHomeLoc.PositionZ), 'f', 4, 64) + "," +
+			"position_z=" + strconv.FormatFloat(float64(heroHomeLoc.PositionZ), 'f', 4, 64) +
 			"WHERE name = '" + heroName + "'")
 		context.JSON(http.StatusOK, actionResult(1, "Hero resotred successfully"))
 	}
@@ -131,7 +131,6 @@ func (s *Server) ReturnSellingHeros() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var sellingheros []database.SellingHeros
 		s.DB.Find(&sellingheros)
-		log.Println(sellingheros)
 		context.JSON(http.StatusOK, sellingheros)
 	}
 }
