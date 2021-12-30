@@ -165,6 +165,14 @@ func (s *Server) BuyHero() gin.HandlerFunc {
 	}
 }
 
+func (s *Server) ReturnEvents() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		var events []database.Events
+		s.DB.Find(&events)
+		context.JSON(http.StatusOK, events)
+	}
+}
+
 func (s *Server) GetToken() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		var user database.UsersData

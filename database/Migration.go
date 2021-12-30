@@ -59,6 +59,16 @@ type SellingHeros struct {
 	Note       string `json:"note"`
 }
 
+type Events struct {
+	gorm.Model
+	StartDate   time.Time `json:"start_date"`
+	EndDate     time.Time `json:"end_date"`
+	Gift        string    `json:"gift"`
+	Conditions  string    `json:"conditions"`
+	Description string    `json:"description"`
+	Icon        string    `json:"icon"`
+}
+
 func DbSqlMigration(url string) *gorm.DB {
 	db, err := gorm.Open(mysql.Open(url), &gorm.Config{})
 	if err != nil {
@@ -70,6 +80,7 @@ func DbSqlMigration(url string) *gorm.DB {
 	db.AutoMigrate(&Wallet{})
 	db.AutoMigrate(&Transaction{})
 	db.AutoMigrate(&SellingHeros{})
+	db.AutoMigrate(&Events{})
 	err = db.Use(dbresolver.Register(dbresolver.Config{
 		Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "messenger_api", "characters", 1))}}, "characters").
 		Register(dbresolver.Config{

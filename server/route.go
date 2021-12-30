@@ -2,8 +2,9 @@ package server
 
 func (s *Server) Routes() {
 	s.Router.POST("/login", s.GetToken())
-	s.Router.GET("/get_available_wallets", s.checkToken(), s.AvailableWallets())
 	s.Router.POST("/register", s.AddUser())
+	s.Router.GET("/events", s.ReturnEvents())
+	s.Router.GET("/get_available_wallets", s.checkToken(), s.AvailableWallets())
 	// Login required (WoW DB)
 	s.Router.GET("/wow/get_info", s.checkToken(), s.ReturnUserInfo())
 	s.Router.GET("/wow/hero_info/:hero_name", s.checkToken(), s.ReturnHeroInfo())
