@@ -223,7 +223,7 @@ func (s *Server) GetToken() gin.HandlerFunc {
 		key := []byte("Ali@Kian")
 		if err := s.DB.Where(database.UsersData{Username: user.Username,
 			Password: MD5(user.Password)}).First(&user).Error; err != nil {
-			context.JSON(http.StatusOK, Response{
+			context.JSON(http.StatusUnauthorized, Response{
 				StatusCode: -1,
 				Body:       "Invalid credentials",
 			})
