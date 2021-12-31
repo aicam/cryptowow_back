@@ -209,3 +209,17 @@ func (s *Server) GetToken() gin.HandlerFunc {
 		})
 	}
 }
+
+func (s *Server) GetCSRFToken() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		ip := context.ClientIP()
+		log.Println(ip)
+		// TODO: environment variables
+		csrfToken := tokenize("Ali@Kian", ip)
+		context.JSON(http.StatusOK, Response{
+			StatusCode: 1,
+			Body:       "Base64 " + csrfToken,
+		})
+
+	}
+}

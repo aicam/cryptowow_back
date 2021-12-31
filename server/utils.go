@@ -4,13 +4,24 @@ import (
 	"bytes"
 	"crypto/des"
 	"crypto/md5"
+	"crypto/sha1"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 )
+
+func tokenize(secret, salt string) string {
+	h := sha1.New()
+	io.WriteString(h, salt+"-"+secret)
+	hash := base64.URLEncoding.EncodeToString(h.Sum(nil))
+
+	return hash
+}
 
 func stringInSlice(a string, list []string) bool {
 	for _, b := range list {

@@ -2,5 +2,17 @@
   "server_status": {
     "online": 38,
     "total": 255
-  }
+  },
+  "rankings": [
+    {"today_honor": "Abari", "today_kills": "Pier", "total_kills": "Pier", "total_time": "Lichking", "money": "Carbon"},
+    {"today_honor": "Pier", "today_kills": "Valentine", "total_kills": "Kosawat", "total_time": "Valentine", "money": "Thekir"},
+    {"today_honor": "Hornyboy", "today_kills": "Hornyboy", "total_kills": "White", "total_time": "Kzak", "money": "Valentine"},
+    {"today_honor": "Natasha", "today_kills": "Ion", "total_kills": "Kapal", "total_time": "Rush", "money": "Voosh"},
+    {"today_honor": "Lemonade", "today_kills": "Roza", "total_kills": "Vashj", "total_time": "Talegan", "money": "Ooo"},
+    {"today_honor": "Paparatzi", "today_kills": "Rockstar", "total_kills": "Volvole", "total_time": "Taghtagh", "money": "Kiyanoosh"},
+    {"today_honor": "Destroyer", "today_kills": "Hot", "total_kills": "Queen", "total_time": "Storm", "money": "Yahoo"},
+    {"today_honor": "Outsider", "today_kills": "Godbless", "total_kills": "Biyar", "total_time": "Denmo", "money": "Melody"},
+    {"today_honor": "Venom", "today_kills": "William", "total_kills": "Arthas", "total_time": "Hermos", "money": "Matador"},
+    {"today_honor": "Viagra", "today_kills": "Erratos", "total_kills": "Albama", "total_time": "Mika", "money": "Robinhood"}
+  ]
 }
