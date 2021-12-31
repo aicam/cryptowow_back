@@ -138,13 +138,13 @@ func (s *Server) AddUser() gin.HandlerFunc {
 		//	UsedHeroName: "",
 		//}
 		//s.DB.Save(&gift)
-		newUser.Password = MD5(newUser.Password)
 		log.Println(newUser.Password)
 
 		s.DB.Save(&newUser)
 
 		// Uncomment
 		GMReqs.CreateAccount(newUser.Username, newUser.Password)
+		newUser.Password = MD5(newUser.Password)
 		ipTrack.Checked = 1
 		s.DB.Save(&ipTrack)
 		context.JSON(http.StatusOK, Response{
