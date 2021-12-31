@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/hex"
 	"errors"
+	"github.com/aicam/cryptowow_back/GMReqs"
 	"github.com/aicam/cryptowow_back/database"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Response struct {
@@ -88,29 +90,63 @@ func (s *Server) AddUser() gin.HandlerFunc {
 		var newUser database.UsersData
 		var existUser database.UsersData
 		_ = context.BindJSON(&newUser)
-		if err := s.DB.Where(&database.UsersData{Username: newUser.Username}).Find(&existUser).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+
+		ip := context.ClientIP()
+		csrfHeader := context.GetHeader("X-CSRF-Token")
+		log.Println(ip)
+		var ipTrack database.IPRecords
+		iperr := s.DB.Where(&database.IPRecords{IPAddress: ip}).First(&ipTrack).Error
+		if errors.Is(iperr, gorm.ErrRecordNotFound) {
+			context.JSON(http.StatusOK, Response{
+				StatusCode: -13,
+				Body:       "Malicious activity detected!",
+			})
+			return
+		}
+		if ipTrack.Info != "" {
+			if time.Now().Add(-30*time.Minute).Before(ipTrack.UpdatedAt) && ipTrack.Checked == 1 {
+				context.JSON(http.StatusOK, Response{
+					StatusCode: -1,
+					Body:       "Too many requests",
+				})
+				return
+			}
+			if ipTrack.Info != csrfHeader {
+				context.JSON(http.StatusOK, Response{
+					StatusCode: -8,
+					Body:       "Malicious activity detected",
+				})
+				return
+			}
+
+		}
+
+		if err := s.DB.Where(&database.UsersData{Username: newUser.Username}).First(&existUser).Error; !errors.Is(err, gorm.ErrRecordNotFound) {
 			context.JSON(http.StatusOK, Response{
 				StatusCode: 0,
 				Body:       "Username exist",
 			})
 			return
 		}
-		gift := database.Gifts{
-			Username:     newUser.Username,
-			Description:  "Level up first hero free!",
-			Action:       "lvlup",
-			Condition:    "Register",
-			Used:         false,
-			UsedHeroName: "",
-		}
-		s.DB.Save(&gift)
+
+		//gift := database.Gifts{
+		//	Username:     newUser.Username,
+		//	Description:  "Level up first hero free!",
+		//	Action:       "lvlup",
+		//	Condition:    "Register",
+		//	Used:         false,
+		//	UsedHeroName: "",
+		//}
+		//s.DB.Save(&gift)
 		newUser.Password = MD5(newUser.Password)
 		log.Println(newUser.Password)
+
 		s.DB.Save(&newUser)
 
 		// Uncomment
-		//GMReqs.CreateAccount(newUser.Username, newUser.Password)
-
+		GMReqs.CreateAccount(newUser.Username, newUser.Password)
+		ipTrack.Checked = 1
+		s.DB.Save(&ipTrack)
 		context.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			Body:       "Added",
@@ -215,11 +251,26 @@ func (s *Server) GetCSRFToken() gin.HandlerFunc {
 		ip := context.ClientIP()
 		log.Println(ip)
 		// TODO: environment variables
-		csrfToken := tokenize("Ali@Kian", ip)
+		var ipTrack database.IPRecords
+		s.DB.Where(&database.IPRecords{IPAddress: ip}).First(&ipTrack)
+		if ipTrack.Info != "" {
+			if time.Now().Add(-30 * time.Minute).Before(ipTrack.UpdatedAt) {
+				context.JSON(http.StatusOK, Response{
+					StatusCode: -1,
+					Body:       "Too many requests",
+				})
+				return
+			}
+		}
+		csrfToken := tokenize("Ali@Kian"+time.Now().String(), ip)
+		ipTrack.IPAddress = ip
+		ipTrack.Info = csrfToken
+		ipTrack.Checked = 0
+		ipTrack.Reason = "Registration"
+		s.DB.Save(&ipTrack)
 		context.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			Body:       "Base64 " + csrfToken,
 		})
-
 	}
 }

@@ -10,17 +10,17 @@ import (
 
 func makeRequest(cm string) {
 	client := &http.Client{}
-	file, err := ioutil.ReadFile("test/TC_SOAP")
+	file, err := ioutil.ReadFile("GMReqs/TC_SOAP")
 	if err != nil {
 		log.Println(err)
 	}
 	reqBody := strings.Replace(string(file), "GMCommand", cm, 1)
 	//log.Println(reqBody)
-	req, err := http.NewRequest("POST", "http://127.0.0.1:7878", bytes.NewBufferString(reqBody))
+	req, err := http.NewRequest("POST", "http://194.5.192.243:7878", bytes.NewBufferString(reqBody))
 	if err != nil {
 		log.Println(err)
 	}
-	req.SetBasicAuth("ali", "ali")
+	req.SetBasicAuth("test1", "test1")
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Println(err)

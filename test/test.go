@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"strconv"
+	"time"
 )
 
 type Hero struct {
@@ -51,6 +51,6 @@ func main() {
 	//expr = expr[:len(expr)-2]
 	//expr += ")"
 	//log.Print(expr)
-	log.Print(strconv.FormatFloat(3.12345678, 'f', 3, 64))
+	log.Print(time.Now().String())
 
 }

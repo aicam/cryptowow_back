@@ -69,6 +69,15 @@ type Events struct {
 	Icon        string    `json:"icon"`
 }
 
+type IPRecords struct {
+	gorm.Model
+	IPAddress string `json:"ip_address"`
+	TrackID   int    `json:"track_id"`
+	Reason    string `json:"reason"`
+	Info      string `json:"info"`
+	Checked   int    `json:"checked"`
+}
+
 func DbSqlMigration(url string) *gorm.DB {
 	db, err := gorm.Open(mysql.Open(url), &gorm.Config{})
 	if err != nil {
@@ -81,6 +90,7 @@ func DbSqlMigration(url string) *gorm.DB {
 	db.AutoMigrate(&Transaction{})
 	db.AutoMigrate(&SellingHeros{})
 	db.AutoMigrate(&Events{})
+	db.AutoMigrate(&IPRecords{})
 	err = db.Use(dbresolver.Register(dbresolver.Config{
 		Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "messenger_api", "characters", 1))}}, "characters").
 		Register(dbresolver.Config{
