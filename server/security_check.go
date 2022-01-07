@@ -7,18 +7,18 @@ import (
 )
 
 func (s *Server) checkToken() gin.HandlerFunc {
-	return func(context *gin.Context) {
+	return func(c *gin.Context) {
 		key := []byte("Ali@Kian")
-		token, err := hex.DecodeString(context.GetHeader("Authorization"))
+		token, err := hex.DecodeString(c.GetHeader("Authorization"))
 		if len(token) == 0 {
-			context.AbortWithStatusJSON(http.StatusOK, Response{
+			c.AbortWithStatusJSON(http.StatusOK, Response{
 				StatusCode: -1,
 				Body:       "Authorization failed",
 			})
 			return
 		}
 		if err != nil {
-			context.AbortWithStatusJSON(http.StatusOK, Response{
+			c.AbortWithStatusJSON(http.StatusOK, Response{
 				StatusCode: -1,
 				Body:       "Authorization failed",
 			})
@@ -26,14 +26,14 @@ func (s *Server) checkToken() gin.HandlerFunc {
 		}
 		username, err := DesDecrypt(token, key)
 		if err != nil {
-			context.AbortWithStatusJSON(http.StatusOK, Response{
+			c.AbortWithStatusJSON(http.StatusOK, Response{
 				StatusCode: -1,
 				Body:       "Authorization failed",
 			})
 			return
 		}
-		context.Request.Header.Set("username", string(username))
-		//context.Header()
-		context.Next()
+		c.Request.Header.Set("username", string(username))
+		//c.Header()
+		c.Next()
 	}
 }

@@ -21,8 +21,8 @@ type Response struct {
 }
 
 func (s *Server) ReturnHeroInfo() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		heroName := context.Param("hero_name")
+	return func(c *gin.Context) {
+		heroName := c.Param("hero_name")
 		var heroInfo HeroInfo
 		s.DB.Clauses(dbresolver.Use("characters")).Raw("SELECT guid, name, race, gender, level, class, equipmentCache FROM characters WHERE name='" + heroName + "'").Scan(&heroInfo)
 		s.DB.Clauses(dbresolver.Use("characters")).Raw("SELECT achievement FROM character_achievement WHERE guid=" + strconv.Itoa(heroInfo.ID)).Find(&heroInfo.Achievements)
@@ -44,21 +44,21 @@ func (s *Server) ReturnHeroInfo() gin.HandlerFunc {
 			}
 		}
 		//heroInfo.Achievements = string(achievements.Achievement)
-		context.JSON(http.StatusOK, heroInfo)
+		c.JSON(http.StatusOK, heroInfo)
 	}
 }
 
 func (s *Server) AvailableWallets() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		context.JSON(http.StatusOK, struct {
+	return func(c *gin.Context) {
+		c.JSON(http.StatusOK, struct {
 			Wallets []string `json:"wallets"`
 		}{Wallets: []string{"Trust Wallet", "Bitpay"}})
 	}
 }
 
 func (s *Server) ReturnUserInfo() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		username := context.GetHeader("username")
+	return func(c *gin.Context) {
+		username := c.GetHeader("username")
 		var id int
 		s.DB.Clauses(dbresolver.Use("auth")).Raw("SELECT id from account WHERE username='" + strings.ToUpper(username) + "'").Scan(&id)
 		var heros []Hero
@@ -75,7 +75,8 @@ func (s *Server) ReturnUserInfo() gin.HandlerFunc {
 		currencies := WalletCurrencies()
 		var wallets []database.Wallet
 		s.DB.Where(&database.Wallet{Name: username}).Find(&wallets)
-		context.JSON(http.StatusOK, struct {
+
+		c.JSON(http.StatusOK, struct {
 			Heros        []Hero                  `json:"heros"`
 			Gifts        []database.Gifts        `json:"gifts"`
 			Wallets      []database.Wallet       `json:"wallets"`
@@ -86,18 +87,18 @@ func (s *Server) ReturnUserInfo() gin.HandlerFunc {
 	}
 }
 func (s *Server) AddUser() gin.HandlerFunc {
-	return func(context *gin.Context) {
+	return func(c *gin.Context) {
 		var newUser database.UsersData
 		var existUser database.UsersData
-		_ = context.BindJSON(&newUser)
+		_ = c.BindJSON(&newUser)
 
-		ip := context.ClientIP()
-		csrfHeader := context.GetHeader("X-CSRF-Token")
+		ip := c.ClientIP()
+		csrfHeader := c.GetHeader("X-CSRF-Token")
 		log.Println(ip)
 		var ipTrack database.IPRecords
 		iperr := s.DB.Where(&database.IPRecords{IPAddress: ip}).First(&ipTrack).Error
 		if errors.Is(iperr, gorm.ErrRecordNotFound) {
-			context.JSON(http.StatusOK, Response{
+			c.JSON(http.StatusOK, Response{
 				StatusCode: -13,
 				Body:       "Malicious activity detected!",
 			})
@@ -105,14 +106,14 @@ func (s *Server) AddUser() gin.HandlerFunc {
 		}
 		if ipTrack.Info != "" {
 			if time.Now().Add(-30*time.Minute).Before(ipTrack.UpdatedAt) && ipTrack.Checked == 1 {
-				context.JSON(http.StatusOK, Response{
+				c.JSON(http.StatusOK, Response{
 					StatusCode: -1,
 					Body:       "Too many requests",
 				})
 				return
 			}
 			if ipTrack.Info != csrfHeader {
-				context.JSON(http.StatusOK, Response{
+				c.JSON(http.StatusOK, Response{
 					StatusCode: -8,
 					Body:       "Malicious activity detected",
 				})
@@ -122,7 +123,7 @@ func (s *Server) AddUser() gin.HandlerFunc {
 		}
 
 		if err := s.DB.Where(&database.UsersData{Username: newUser.Username}).First(&existUser).Error; !errors.Is(err, gorm.ErrRecordNotFound) {
-			context.JSON(http.StatusOK, Response{
+			c.JSON(http.StatusOK, Response{
 				StatusCode: 0,
 				Body:       "Username exist",
 			})
@@ -146,7 +147,7 @@ func (s *Server) AddUser() gin.HandlerFunc {
 		s.DB.Save(&newUser)
 		ipTrack.Checked = 1
 		s.DB.Save(&ipTrack)
-		context.JSON(http.StatusOK, Response{
+		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			Body:       "Added",
 		})
@@ -154,16 +155,16 @@ func (s *Server) AddUser() gin.HandlerFunc {
 }
 
 func (s *Server) BuyHero() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		username := context.GetHeader("username")
+	return func(c *gin.Context) {
+		username := c.GetHeader("username")
 		var buyingHero struct {
 			HeroInfo         database.SellingHeros `json:"hero_info"`
 			SelectedCurrency string                `json:"selected_currency"`
 		}
 		var testBuyingHero database.SellingHeros
-		err := context.BindJSON(&buyingHero)
+		err := c.BindJSON(&buyingHero)
 		if err != nil || buyingHero.HeroInfo.HeroID == 0 {
-			context.JSON(http.StatusOK, Response{
+			c.JSON(http.StatusOK, Response{
 				StatusCode: -1,
 				Body:       "Invalid request",
 			})
@@ -171,7 +172,7 @@ func (s *Server) BuyHero() gin.HandlerFunc {
 		}
 		err = s.DB.Where(&buyingHero.HeroInfo).First(&testBuyingHero).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			context.JSON(http.StatusOK, Response{
+			c.JSON(http.StatusOK, Response{
 				StatusCode: -3,
 				Body:       "Malicious activity detected",
 			})
@@ -181,7 +182,7 @@ func (s *Server) BuyHero() gin.HandlerFunc {
 		s.DB.Clauses(dbresolver.Use("auth")).Raw("SELECT id from account WHERE username='" + strings.ToUpper(username) + "'").Scan(&id)
 		err = SetBuyHeroTransaction(username, buyingHero.HeroInfo.Username, buyingHero.SelectedCurrency, testBuyingHero.Price, s.DB)
 		if err != nil {
-			context.JSON(http.StatusOK, Response{
+			c.JSON(http.StatusOK, Response{
 				StatusCode: -1,
 				Body:       err.Error(),
 			})
@@ -193,7 +194,7 @@ func (s *Server) BuyHero() gin.HandlerFunc {
 			log.Println("Update account id err: ", err)
 		}
 		s.DB.Delete(&testBuyingHero)
-		context.JSON(http.StatusOK, Response{
+		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			Body:       "Hero transferred to " + username + " account",
 		})
@@ -201,20 +202,50 @@ func (s *Server) BuyHero() gin.HandlerFunc {
 }
 
 func (s *Server) ReturnEvents() gin.HandlerFunc {
-	return func(context *gin.Context) {
+	return func(c *gin.Context) {
 		var events []database.Events
 		s.DB.Find(&events)
-		context.JSON(http.StatusOK, events)
+		c.JSON(http.StatusOK, events)
+	}
+}
+
+func (s *Server) AddTransaction() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		username := c.GetHeader("username")
+		var tx database.TransactionLog
+		err := c.BindJSON(&tx)
+		if err != nil {
+			c.JSON(http.StatusOK, Response{
+				StatusCode: -1,
+				Body:       "Invalid Data",
+			})
+			return
+		}
+		txHash := strings.ToUpper(HashTransactionToken(tx.TransactionHash))
+		if txHash != tx.TXHash {
+			c.JSON(http.StatusOK, Response{
+				StatusCode: -20,
+				Body:       "Malicious activity detected! take care of your IP and token",
+			})
+			return
+		}
+		tx.Username = username
+		s.DB.Save(&tx)
+		AddBalance(username, tx.CurrencyID, tx.Amount, s.DB)
+		c.JSON(http.StatusOK, Response{
+			StatusCode: 1,
+			Body:       "Transaction Done successfully",
+		})
 	}
 }
 
 func (s *Server) GetToken() gin.HandlerFunc {
-	return func(context *gin.Context) {
+	return func(c *gin.Context) {
 		var user database.UsersData
-		err := context.BindJSON(&user)
+		err := c.BindJSON(&user)
 		if err != nil {
 			log.Println(err)
-			context.JSON(http.StatusOK, Response{
+			c.JSON(http.StatusOK, Response{
 				StatusCode: -1,
 				Body:       "Invalid credentials",
 			})
@@ -223,7 +254,7 @@ func (s *Server) GetToken() gin.HandlerFunc {
 		key := []byte("Ali@Kian")
 		if err := s.DB.Where(database.UsersData{Username: user.Username,
 			Password: MD5(user.Password)}).First(&user).Error; err != nil {
-			context.JSON(http.StatusUnauthorized, Response{
+			c.JSON(http.StatusUnauthorized, Response{
 				StatusCode: -1,
 				Body:       "Invalid credentials",
 			})
@@ -232,13 +263,13 @@ func (s *Server) GetToken() gin.HandlerFunc {
 
 		token, err := DesEncrypt([]byte(user.Username), key)
 		if err != nil {
-			context.JSON(http.StatusOK, Response{
+			c.JSON(http.StatusOK, Response{
 				StatusCode: -1,
 				Body:       err.Error(),
 			})
 			return
 		}
-		context.JSON(http.StatusOK, Response{
+		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			Body:       hex.EncodeToString(token),
 		})
@@ -246,15 +277,15 @@ func (s *Server) GetToken() gin.HandlerFunc {
 }
 
 func (s *Server) GetCSRFToken() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		ip := context.ClientIP()
+	return func(c *gin.Context) {
+		ip := c.ClientIP()
 		log.Println(ip)
 		// TODO: environment variables
 		var ipTrack database.IPRecords
 		s.DB.Where(&database.IPRecords{IPAddress: ip}).First(&ipTrack)
 		if ipTrack.Info != "" {
 			if time.Now().Add(-30 * time.Minute).Before(ipTrack.UpdatedAt) {
-				context.JSON(http.StatusOK, Response{
+				c.JSON(http.StatusOK, Response{
 					StatusCode: -1,
 					Body:       "Too many requests",
 				})
@@ -267,7 +298,7 @@ func (s *Server) GetCSRFToken() gin.HandlerFunc {
 		ipTrack.Checked = 0
 		ipTrack.Reason = "Registration"
 		s.DB.Save(&ipTrack)
-		context.JSON(http.StatusOK, Response{
+		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			Body:       "Base64 " + csrfToken,
 		})

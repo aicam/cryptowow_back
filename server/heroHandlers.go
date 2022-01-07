@@ -43,10 +43,10 @@ func checkHeroIsOnline(c *gin.Context, DB *gorm.DB, heroName string, username st
 }
 
 func (s *Server) RestoreHero() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		heroName := context.Param("hero_name")
-		username := context.GetHeader("username")
-		hero, err := checkHeroIsOnline(context, s.DB, heroName, username)
+	return func(c *gin.Context) {
+		heroName := c.Param("hero_name")
+		username := c.GetHeader("username")
+		hero, err := checkHeroIsOnline(c, s.DB, heroName, username)
 		if !err {
 			return
 		}
@@ -63,24 +63,24 @@ func (s *Server) RestoreHero() gin.HandlerFunc {
 			"position_y=" + strconv.FormatFloat(float64(heroHomeLoc.PositionY), 'f', 4, 64) + "," +
 			"position_z=" + strconv.FormatFloat(float64(heroHomeLoc.PositionZ), 'f', 4, 64) +
 			"WHERE name = '" + heroName + "'")
-		context.JSON(http.StatusOK, actionResult(1, "Hero resotred successfully"))
+		c.JSON(http.StatusOK, actionResult(1, "Hero resotred successfully"))
 	}
 }
 
 func (s *Server) SellHero() gin.HandlerFunc {
-	return func(context *gin.Context) {
+	return func(c *gin.Context) {
 		var reqBody struct {
 			HeroName  string `json:"hero_name"`
 			HeroPrice string `json:"hero_price"`
 			Note      string `json:"note"`
 		}
-		errBody := context.BindJSON(&reqBody)
+		errBody := c.BindJSON(&reqBody)
 		if errBody != nil {
-			context.JSON(http.StatusOK, actionResult(-1, "Invalid request"))
+			c.JSON(http.StatusOK, actionResult(-1, "Invalid request"))
 			return
 		}
-		username := context.GetHeader("username")
-		hero, err := checkHeroIsOnline(context, s.DB, reqBody.HeroName, username)
+		username := c.GetHeader("username")
+		hero, err := checkHeroIsOnline(c, s.DB, reqBody.HeroName, username)
 		if !err {
 			return
 		}
@@ -100,37 +100,37 @@ func (s *Server) SellHero() gin.HandlerFunc {
 			newSellingHero.TotalTime = hero.TotalTime
 			newSellingHero.Gender = hero.Gender
 			s.DB.Save(&newSellingHero)
-			context.JSON(http.StatusOK, actionResult(1, "Added successfully"))
+			c.JSON(http.StatusOK, actionResult(1, "Added successfully"))
 		} else {
-			context.JSON(http.StatusOK, actionResult(-1, "Hero is already for sale!"))
+			c.JSON(http.StatusOK, actionResult(-1, "Hero is already for sale!"))
 			return
 		}
 	}
 }
 
 func (s *Server) CancellSellingHero() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		heroName := context.Param("hero_name")
-		username := context.GetHeader("username")
-		_, err := checkHeroIsOnline(context, s.DB, heroName, username)
+	return func(c *gin.Context) {
+		heroName := c.Param("hero_name")
+		username := c.GetHeader("username")
+		_, err := checkHeroIsOnline(c, s.DB, heroName, username)
 		if !err {
 			return
 		}
 		var sHero database.SellingHeros
 		findErr := s.DB.Where(database.SellingHeros{Username: username, HeroName: heroName}).First(&sHero).Error
 		if errors.Is(findErr, gorm.ErrRecordNotFound) {
-			context.JSON(http.StatusOK, actionResult(-1, "Hero is not for sale already!!"))
+			c.JSON(http.StatusOK, actionResult(-1, "Hero is not for sale already!!"))
 			return
 		}
 		s.DB.Delete(&sHero)
-		context.JSON(http.StatusOK, actionResult(1, "Selling canceled"))
+		c.JSON(http.StatusOK, actionResult(1, "Selling canceled"))
 	}
 }
 
 func (s *Server) ReturnSellingHeros() gin.HandlerFunc {
-	return func(context *gin.Context) {
+	return func(c *gin.Context) {
 		var sellingheros []database.SellingHeros
 		s.DB.Find(&sellingheros)
-		context.JSON(http.StatusOK, sellingheros)
+		c.JSON(http.StatusOK, sellingheros)
 	}
 }

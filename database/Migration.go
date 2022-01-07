@@ -78,6 +78,31 @@ type IPRecords struct {
 	Checked   int    `json:"checked"`
 }
 
+type TransactionLog struct {
+	gorm.Model
+	Username        string  `json:"username"`
+	Amount          float64 `json:"amount"`
+	CurrencyID      string  `json:"currency_id"`
+	Status          bool    `json:"status"`
+	BlockHash       string  `json:"block_hash"`
+	BlockNumber     int     `json:"block_number"`
+	From            string  `json:"from"`
+	To              string  `json:"to"`
+	TransactionHash string  `json:"transaction_hash"`
+	TXHash          string  `json:"tx_hash"`
+}
+
+type CashOutRequest struct {
+	gorm.Model
+	Username     string  `json:"username"`
+	Amount       float64 `json:"amount"`
+	CurrencyID   string  `json:"currency_id"`
+	WalletAdress string  `json:"wallet_adress"`
+	WalletApp    string  `json:"wallet_app"`
+	Note         string  `json:"note"`
+	PendingStage int     `json:"pending_stage"`
+}
+
 func DbSqlMigration(url string) *gorm.DB {
 	db, err := gorm.Open(mysql.Open(url), &gorm.Config{})
 	if err != nil {
@@ -91,6 +116,7 @@ func DbSqlMigration(url string) *gorm.DB {
 	db.AutoMigrate(&SellingHeros{})
 	db.AutoMigrate(&Events{})
 	db.AutoMigrate(&IPRecords{})
+	db.AutoMigrate(&TransactionLog{})
 	err = db.Use(dbresolver.Register(dbresolver.Config{
 		Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "messenger_api", "characters", 1))}}, "characters").
 		Register(dbresolver.Config{

@@ -8,11 +8,11 @@ import (
 )
 
 func (s *Server) GetServerStatus() gin.HandlerFunc {
-	return func(context *gin.Context) {
+	return func(c *gin.Context) {
 		// Open our jsonFile
 		jsonFile, _ := os.Open("database/index.json")
 		defer jsonFile.Close()
 		b, _ := ioutil.ReadAll(jsonFile)
-		context.String(http.StatusOK, string(b))
+		c.String(http.StatusOK, string(b))
 	}
 }

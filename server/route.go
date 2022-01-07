@@ -19,5 +19,7 @@ func (s *Server) Routes() {
 	s.Router.GET("/wow/selling_heros", s.checkToken(), s.ReturnSellingHeros())
 	s.Router.POST("/wow/buy_hero", s.checkToken(), s.BuyHero())
 	// Wallet
-
+	s.Router.POST("/wallet/add_transaction", s.checkToken(), s.AddTransaction())
+	s.Router.GET("/wallet/reference", s.checkToken(), s.GetWalletAddress())
+	s.Router.GET("/wallet/transaction_log", s.checkToken(), s.GetUserTransactions())
 }
