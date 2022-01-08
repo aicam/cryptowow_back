@@ -88,7 +88,7 @@ func (s *Server) AddCashOut() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		username := c.GetHeader("username")
 		var co database.CashOutRequest
-		err := c.BindJSON(co)
+		err := c.BindJSON(&co)
 		if err != nil {
 			return
 		}
@@ -101,6 +101,7 @@ func (s *Server) AddCashOut() gin.HandlerFunc {
 			return
 		}
 		co.PendingStage = 0
+		co.Username = username
 		s.DB.Save(&co)
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,

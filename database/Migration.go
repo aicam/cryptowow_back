@@ -101,6 +101,7 @@ type CashOutRequest struct {
 	WalletApp    string  `json:"wallet_app"`
 	Note         string  `json:"note"`
 	PendingStage int     `json:"pending_stage"`
+	TX           string  `json:"tx"`
 }
 
 func DbSqlMigration(url string) *gorm.DB {
@@ -117,6 +118,7 @@ func DbSqlMigration(url string) *gorm.DB {
 	db.AutoMigrate(&Events{})
 	db.AutoMigrate(&IPRecords{})
 	db.AutoMigrate(&TransactionLog{})
+	db.AutoMigrate(&CashOutRequest{})
 	err = db.Use(dbresolver.Register(dbresolver.Config{
 		Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "messenger_api", "characters", 1))}}, "characters").
 		Register(dbresolver.Config{
