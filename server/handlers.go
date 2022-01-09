@@ -16,8 +16,8 @@ import (
 )
 
 type Response struct {
-	StatusCode int    `json:"status"`
-	Body       string `json:"body"`
+	StatusCode int         `json:"status"`
+	Body       interface{} `json:"body"`
 }
 
 func (s *Server) ReturnHeroInfo() gin.HandlerFunc {

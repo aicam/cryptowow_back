@@ -110,6 +110,18 @@ func (s *Server) AddCashOut() gin.HandlerFunc {
 	}
 }
 
+func (s *Server) ReturnCashOut() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var cos []database.CashOutRequest
+		username := c.GetHeader("username")
+		s.DB.Where(&database.CashOutRequest{Username: username}).Find(&cos)
+		c.JSON(http.StatusOK, Response{
+			StatusCode: 1,
+			Body:       cos,
+		})
+	}
+}
+
 func HashTransactionToken(txHash string) string {
 	h := sha1.New()
 	h.Write([]byte(txHash))
