@@ -94,14 +94,14 @@ type TransactionLog struct {
 
 type CashOutRequest struct {
 	gorm.Model
-	Username     string  `json:"username"`
-	Amount       float64 `json:"amount"`
-	CurrencyID   string  `json:"currency_id"`
-	WalletAdress string  `json:"wallet_adress"`
-	WalletApp    string  `json:"wallet_app"`
-	Note         string  `json:"note"`
-	PendingStage int     `json:"pending_stage"`
-	TX           string  `json:"tx"`
+	Username      string  `json:"username"`
+	Amount        float64 `json:"amount"`
+	CurrencyID    string  `json:"currency_id"`
+	WalletAddress string  `json:"wallet_address"`
+	WalletApp     string  `json:"wallet_app"`
+	Note          string  `json:"note"`
+	PendingStage  int     `json:"pending_stage"`
+	TX            string  `json:"tx"`
 }
 
 func DbSqlMigration(url string) *gorm.DB {
