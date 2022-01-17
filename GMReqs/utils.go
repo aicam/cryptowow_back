@@ -40,3 +40,9 @@ func CreateAccount(username, password string) {
 	cm := "account create " + username + " " + password
 	makeRequest(cm)
 }
+
+func AddItems(title, body, heroName, items string) {
+	cm := "send items " + heroName + " \"" + title + "\" \"" + body + "\" " + items
+	log.Print(cm)
+	makeRequest(cm)
+}

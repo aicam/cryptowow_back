@@ -21,7 +21,7 @@ func actionResult(statusCode int, body string) struct {
 	}{Status: statusCode, Body: body}
 }
 
-func checkHeroIsOnline(c *gin.Context, DB *gorm.DB, heroName string, username string) (Hero, bool) {
+func CheckHeroIsAllowed(c *gin.Context, DB *gorm.DB, heroName string, username string) (Hero, bool) {
 	var hero Hero
 	var accID int
 	DB.Clauses(dbresolver.Use("auth")).Raw("SELECT id FROM account WHERE username='" + username + "'").Scan(&accID)
@@ -46,7 +46,7 @@ func (s *Server) RestoreHero() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		heroName := c.Param("hero_name")
 		username := c.GetHeader("username")
-		hero, err := checkHeroIsOnline(c, s.DB, heroName, username)
+		hero, err := CheckHeroIsAllowed(c, s.DB, heroName, username)
 		if !err {
 			return
 		}
@@ -80,7 +80,7 @@ func (s *Server) SellHero() gin.HandlerFunc {
 			return
 		}
 		username := c.GetHeader("username")
-		hero, err := checkHeroIsOnline(c, s.DB, reqBody.HeroName, username)
+		hero, err := CheckHeroIsAllowed(c, s.DB, reqBody.HeroName, username)
 		if !err {
 			return
 		}
@@ -112,7 +112,7 @@ func (s *Server) CancellSellingHero() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		heroName := c.Param("hero_name")
 		username := c.GetHeader("username")
-		_, err := checkHeroIsOnline(c, s.DB, heroName, username)
+		_, err := CheckHeroIsAllowed(c, s.DB, heroName, username)
 		if !err {
 			return
 		}
