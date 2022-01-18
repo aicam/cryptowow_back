@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/hex"
 	"errors"
-	"github.com/aicam/cryptowow_back/GMReqs"
 	"github.com/aicam/cryptowow_back/database"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -142,7 +141,7 @@ func (s *Server) AddUser() gin.HandlerFunc {
 		log.Println(newUser.Password)
 
 		// Uncomment
-		GMReqs.CreateAccount(newUser.Username, newUser.Password)
+		//GMReqs.CreateAccount(newUser.Username, newUser.Password)
 		newUser.Password = MD5(newUser.Password)
 		s.DB.Save(&newUser)
 		ipTrack.Checked = 1

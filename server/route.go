@@ -25,5 +25,5 @@ func (s *Server) Routes() {
 	s.Router.POST("/wallet/request_withdraw", s.checkToken(), s.AddCashOut())
 	s.Router.GET("/wallet/return_withdrawal", s.checkToken(), s.ReturnCashOut())
 	// Gifts
-	s.Router.GET("/gift/levelup/:hero_name", s.checkToken(), s.LevelUpGiftHandler())
+	s.Router.GET("/gift/:gift_id/:hero_name", s.checkToken(), s.GiftHandler())
 }

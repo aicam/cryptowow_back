@@ -42,6 +42,22 @@ func CheckHeroIsAllowed(c *gin.Context, DB *gorm.DB, heroName string, username s
 	return hero, true
 }
 
+func TeleportHeroHome(hero Hero, DB *gorm.DB) {
+	var heroHomeLoc HeroPosition
+	switch hero.Race {
+	case 2, 5, 6, 10, 8:
+		heroHomeLoc = Home.Horde
+	default:
+		heroHomeLoc = Home.Alliance
+	}
+	DB.Clauses(dbresolver.Use("characters")).Exec("UPDATE characters SET " +
+		"map=" + strconv.Itoa(heroHomeLoc.Map) + "," +
+		"position_x=" + strconv.FormatFloat(float64(heroHomeLoc.PositionX), 'f', 4, 64) + "," +
+		"position_y=" + strconv.FormatFloat(float64(heroHomeLoc.PositionY), 'f', 4, 64) + "," +
+		"position_z=" + strconv.FormatFloat(float64(heroHomeLoc.PositionZ), 'f', 4, 64) +
+		"WHERE name = '" + hero.Name + "'")
+}
+
 func (s *Server) RestoreHero() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		heroName := c.Param("hero_name")
@@ -50,19 +66,8 @@ func (s *Server) RestoreHero() gin.HandlerFunc {
 		if !err {
 			return
 		}
-		var heroHomeLoc HeroPosition
-		switch hero.Race {
-		case 2, 5, 6, 10, 8:
-			heroHomeLoc = Home.Horde
-		default:
-			heroHomeLoc = Home.Alliance
-		}
-		s.DB.Clauses(dbresolver.Use("characters")).Exec("UPDATE characters SET " +
-			"map=" + strconv.Itoa(heroHomeLoc.Map) + "," +
-			"position_x=" + strconv.FormatFloat(float64(heroHomeLoc.PositionX), 'f', 4, 64) + "," +
-			"position_y=" + strconv.FormatFloat(float64(heroHomeLoc.PositionY), 'f', 4, 64) + "," +
-			"position_z=" + strconv.FormatFloat(float64(heroHomeLoc.PositionZ), 'f', 4, 64) +
-			"WHERE name = '" + heroName + "'")
+		hero.Name = heroName
+		TeleportHeroHome(hero, s.DB)
 		c.JSON(http.StatusOK, actionResult(1, "Hero resotred successfully"))
 	}
 }

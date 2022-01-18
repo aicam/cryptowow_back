@@ -35,6 +35,7 @@ type UsersData struct {
 type Gifts struct {
 	gorm.Model
 	Username     string `json:"username"`
+	GiftID       uint   `json:"gift_id"`
 	Title        string `json:"title"`
 	Description  string `json:"description"`
 	Action       string `json:"action"`

@@ -25,7 +25,7 @@ func makeRequest(cm string) {
 	if err != nil {
 		log.Println(err)
 	}
-	f, err := ioutil.ReadAll(resp.Body)
+	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Println(err)
 	}
@@ -33,7 +33,7 @@ func makeRequest(cm string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(string(f))
+	//log.Println(string(f))
 }
 
 func CreateAccount(username, password string) {
@@ -43,6 +43,5 @@ func CreateAccount(username, password string) {
 
 func AddItems(title, body, heroName, items string) {
 	cm := "send items " + heroName + " \"" + title + "\" \"" + body + "\" " + items
-	log.Print(cm)
 	makeRequest(cm)
 }
