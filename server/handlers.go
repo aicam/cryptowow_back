@@ -281,12 +281,20 @@ func (s *Server) GetCSRFToken() gin.HandlerFunc {
 		log.Println(ip)
 		// TODO: environment variables
 		var ipTrack database.IPRecords
-		s.DB.Where(&database.IPRecords{IPAddress: ip}).First(&ipTrack)
-		if ipTrack.Info != "" {
-			if time.Now().Add(-30 * time.Minute).Before(ipTrack.UpdatedAt) {
+		err := s.DB.Where(&database.IPRecords{IPAddress: ip}).First(&ipTrack).Error
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			if time.Now().Add(-30*time.Minute).Before(ipTrack.UpdatedAt) && ipTrack.Checked == 1 {
 				c.JSON(http.StatusOK, Response{
 					StatusCode: -1,
 					Body:       "Too many requests",
+				})
+				return
+			}
+			csrfToken := tokenize("Ali@Kian"+time.Now().String(), ip)
+			if ipTrack.Checked == 0 {
+				c.JSON(http.StatusOK, Response{
+					StatusCode: 1,
+					Body:       "Base64 " + csrfToken,
 				})
 				return
 			}
