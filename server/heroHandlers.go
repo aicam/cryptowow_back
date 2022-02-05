@@ -68,7 +68,10 @@ func (s *Server) RestoreHero() gin.HandlerFunc {
 		}
 		hero.Name = heroName
 		TeleportHeroHome(hero, s.DB)
-		c.JSON(http.StatusOK, actionResult(1, "Hero resotred successfully"))
+		c.JSON(http.StatusOK, Response{
+			StatusCode: 1,
+			Body:       "Hero resotred successfully",
+		})
 	}
 }
 

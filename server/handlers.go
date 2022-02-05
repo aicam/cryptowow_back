@@ -44,9 +44,10 @@ func (s *Server) ReturnHeroInfo() gin.HandlerFunc {
 
 func (s *Server) AvailableWallets() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.JSON(http.StatusOK, struct {
-			Wallets []string `json:"wallets"`
-		}{Wallets: []string{"Trust Wallet", "Bitpay"}})
+		c.JSON(http.StatusOK, Response{
+			StatusCode: 1,
+			Body:       []string{"Trust Wallet", "Bitpay"},
+		})
 	}
 }
 
@@ -200,7 +201,10 @@ func (s *Server) ReturnEvents() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var events []database.Events
 		s.DB.Find(&events)
-		c.JSON(http.StatusOK, events)
+		c.JSON(http.StatusOK, Response{
+			StatusCode: 1,
+			Body:       events,
+		})
 	}
 }
 

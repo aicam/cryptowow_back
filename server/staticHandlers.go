@@ -13,6 +13,9 @@ func (s *Server) GetServerStatus() gin.HandlerFunc {
 		jsonFile, _ := os.Open("database/index.json")
 		defer jsonFile.Close()
 		b, _ := ioutil.ReadAll(jsonFile)
-		c.String(http.StatusOK, string(b))
+		c.JSON(http.StatusOK, Response{
+			StatusCode: 1,
+			Body:       string(b),
+		})
 	}
 }

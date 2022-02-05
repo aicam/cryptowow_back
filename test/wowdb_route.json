@@ -1,0 +1,23 @@
+{
+  "authorization_token": "ba4ba576aed71dca",
+  "requests": [
+    {
+      "req_type": "GET",
+      "url": "http://localhost:4300/wow/get_info",
+      "auth": true,
+      "body": ""
+    },
+    {
+      "req_type": "GET",
+      "url": "http://localhost:4300/wow/hero_info/Testm",
+      "auth": true,
+      "body": ""
+    },
+    {
+      "req_type": "GET",
+      "url": "http://localhost:4300/wow/restore_hero/Testm",
+      "auth": true,
+      "body": ""
+    }
+  ]
+}
