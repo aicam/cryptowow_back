@@ -14,11 +14,6 @@ import (
 	"time"
 )
 
-type Response struct {
-	StatusCode int         `json:"status"`
-	Body       interface{} `json:"body"`
-}
-
 func (s *Server) ReturnHeroInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		heroName := c.Param("hero_name")
@@ -85,6 +80,7 @@ func (s *Server) ReturnUserInfo() gin.HandlerFunc {
 		}{Heros: heros, Gifts: gifts, Wallets: wallets, Currencies: currencies, SellingHeros: sellingHeros, Username: username})
 	}
 }
+
 func (s *Server) AddUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var newUser database.UsersData

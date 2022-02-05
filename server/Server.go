@@ -10,6 +10,11 @@ import (
 	"os"
 )
 
+type Response struct {
+	StatusCode int         `json:"status"`
+	Body       interface{} `json:"body"`
+}
+
 type Server struct {
 	DB               *gorm.DB
 	Router           *gin.Engine

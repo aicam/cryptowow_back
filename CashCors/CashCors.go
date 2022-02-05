@@ -1,4 +1,4 @@
-package main
+package CashCors
 
 import (
 	"crypto/md5"
