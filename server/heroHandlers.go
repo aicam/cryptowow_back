@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -25,7 +24,7 @@ func CheckHeroIsAllowed(c *gin.Context, DB *gorm.DB, heroName string, username s
 	var hero Hero
 	var accID int
 	DB.Clauses(dbresolver.Use("auth")).Raw("SELECT id FROM account WHERE username='" + username + "'").Scan(&accID)
-	log.Println(accID)
+
 	err := DB.Clauses(dbresolver.Use("characters")).Raw("SELECT account, guid, race, online, gender, level, class, money, totaltime, totalKills from characters WHERE name='" + heroName + "'").First(&hero).Error
 	if err != nil {
 		c.JSON(http.StatusOK, actionResult(-3, "Malicious activity detected"))

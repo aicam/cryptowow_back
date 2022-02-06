@@ -32,8 +32,8 @@ func TestWoWDB(t *testing.T) {
 				auth = testReqArgs.AuthorizationToken
 			}
 			respJS := sendGetReq(t, req.URL, auth)
-			log.Print(req.URL)
 			if respJS.StatusCode != 1 {
+				log.Print(req.URL + " has wrong status code")
 				t.Error(respJS.Body)
 			}
 		}

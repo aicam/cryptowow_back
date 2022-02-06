@@ -38,7 +38,10 @@ func (s *Server) ReturnHeroInfo() gin.HandlerFunc {
 			}
 		}
 		//heroInfo.Achievements = string(achievements.Achievement)
-		c.JSON(http.StatusOK, heroInfo)
+		c.JSON(http.StatusOK, Response{
+			StatusCode: 1,
+			Body:       heroInfo,
+		})
 	}
 }
 
@@ -71,14 +74,17 @@ func (s *Server) ReturnUserInfo() gin.HandlerFunc {
 		var wallets []database.Wallet
 		s.DB.Where(&database.Wallet{Name: username}).Find(&wallets)
 
-		c.JSON(http.StatusOK, struct {
-			Heros        []Hero                  `json:"heros"`
-			Gifts        []database.Gifts        `json:"gifts"`
-			Wallets      []database.Wallet       `json:"wallets"`
-			Currencies   []string                `json:"currencies"`
-			SellingHeros []database.SellingHeros `json:"selling_heros"`
-			Username     string                  `json:"username"`
-		}{Heros: heros, Gifts: gifts, Wallets: wallets, Currencies: currencies, SellingHeros: sellingHeros, Username: username})
+		c.JSON(http.StatusOK, Response{
+			StatusCode: 1,
+			Body: struct {
+				Heros        []Hero                  `json:"heros"`
+				Gifts        []database.Gifts        `json:"gifts"`
+				Wallets      []database.Wallet       `json:"wallets"`
+				Currencies   []string                `json:"currencies"`
+				SellingHeros []database.SellingHeros `json:"selling_heros"`
+				Username     string                  `json:"username"`
+			}{Heros: heros, Gifts: gifts, Wallets: wallets, Currencies: currencies, SellingHeros: sellingHeros, Username: username},
+		})
 	}
 }
 
