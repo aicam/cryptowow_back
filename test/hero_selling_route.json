@@ -1,0 +1,35 @@
+{
+  "authorization_token": "ba4ba576aed71dca",
+  "requests": [
+    {
+      "req_type": "POST",
+      "url": "http://localhost:4300/wow/sell_hero",
+      "auth": true,
+      "body": "{\"hero_name\":\"Testm\",\"hero_price\":\"0.0000001-BTC&0.000005-ETH&250-CWT\"}"
+    },
+    {
+      "req_type": "GET",
+      "url": "http://localhost:4300/wow/cancel_selling_hero/Testm",
+      "auth": true,
+      "body": ""
+    },
+    {
+      "req_type": "GET",
+      "url": "http://localhost:4300/wow/selling_heros",
+      "auth": true,
+      "body": ""
+    },
+    {
+      "req_type": "POST",
+      "url": "http://localhost:4300/wow/sell_hero",
+      "auth": true,
+      "body": "{\"hero_name\":\"Testm\",\"hero_price\":\"0.0000001-BTC&0.000005-ETH&250-CWT\"}"
+    },
+    {
+      "req_type": "POST",
+      "url": "http://localhost:4300/wow/buy_hero",
+      "auth": true,
+      "body": "\"selected_currency\":\"CWT\",\"hero_info\":{\"ID\":14,\"CreatedAt\":\"2021-12-29T05:46:14.902Z\",\"UpdatedAt\":\"2021-12-29T05:46:14.902Z\",\"DeletedAt\":null,\"username\":\"ali\",\"hero_name\":\"Testm\",\"hero_id\":1,\"price\":\"0.002-Ethereum&1000-CWT\",\"class\":8,\"race\":1,\"gender\":true,\"level\":80,\"money\":102076830,\"total_time\":25310,\"total_kills\":0,\"note\":\"ggggg\""
+    }
+  ]
+}

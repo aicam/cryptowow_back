@@ -138,6 +138,9 @@ func (s *Server) ReturnSellingHeros() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var sellingheros []database.SellingHeros
 		s.DB.Find(&sellingheros)
-		c.JSON(http.StatusOK, sellingheros)
+		c.JSON(http.StatusOK, Response{
+			StatusCode: 1,
+			Body:       sellingheros,
+		})
 	}
 }

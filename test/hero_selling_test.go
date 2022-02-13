@@ -9,9 +9,9 @@ import (
 	"testing"
 )
 
-func TestIndex(t *testing.T) {
+func TestHeroSelling(t *testing.T) {
 	// Open our jsonFile
-	jsonFile, err := os.Open("index_route.json")
+	jsonFile, err := os.Open("hero_selling_route.json")
 	// if we os.Open returns an error then handle it
 	if err != nil {
 		fmt.Println(err)
@@ -26,16 +26,19 @@ func TestIndex(t *testing.T) {
 		t.Error(err)
 	}
 	for _, req := range testReqArgs.Requests {
+		var auth = ""
+		if req.Auth {
+			auth = testReqArgs.AuthorizationToken
+		}
+		var respJS Response
 		if req.ReqType == "GET" {
-			var auth = ""
-			if req.Auth {
-				auth = testReqArgs.AuthorizationToken
-			}
-			respJS := sendGETReq(t, req.URL, auth)
-			log.Print(req.URL)
-			if respJS.StatusCode != 1 {
-				t.Error("Status code is wrong")
-			}
+			respJS = sendGETReq(t, req.URL, auth)
+		} else {
+			respJS = sendPOSTReq(t, req.URL, auth, req.Body)
+		}
+		if respJS.StatusCode != 1 {
+			log.Print(req.URL + " has wrong status code")
+			t.Error(respJS.Body)
 		}
 	}
 }
