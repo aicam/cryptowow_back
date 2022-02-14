@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"github.com/aicam/cryptowow_back/database"
+	"github.com/aicam/cryptowow_back/server/payment"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
@@ -13,37 +14,6 @@ import (
 	"strings"
 	"time"
 )
-
-func (s *Server) ReturnHeroInfo() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		heroName := c.Param("hero_name")
-		var heroInfo HeroInfo
-		s.DB.Clauses(dbresolver.Use("characters")).Raw("SELECT guid, name, race, gender, level, class, equipmentCache FROM characters WHERE name='" + heroName + "'").Scan(&heroInfo)
-		s.DB.Clauses(dbresolver.Use("characters")).Raw("SELECT achievement FROM character_achievement WHERE guid=" + strconv.Itoa(heroInfo.ID)).Find(&heroInfo.Achievements)
-		s.DB.Clauses(dbresolver.Use("characters")).Raw("SELECT faction, standing FROM character_reputation WHERE guid='" + strconv.Itoa(heroInfo.ID) +
-			"' AND faction in (1106, 1052, 1090, 1098, 1156, 1073, 1119, 1091)").Find(&heroInfo.Reputations)
-		var heroSpells []string
-		s.DB.Clauses(dbresolver.Use("characters")).Raw("SELECT spell FROM character_spell WHERE guid=" + strconv.Itoa(heroInfo.ID)).Find(&heroSpells)
-		for _, mount := range s.WoWInfo.Mounts.Data {
-			if stringInSlice(mount.SpellID, heroSpells) {
-				heroInfo.Mounts = append(heroInfo.Mounts, struct {
-					ID   string `json:"id"`
-					Name string `json:"name"`
-				}{ID: mount.ID, Name: mount.Name})
-			}
-		}
-		for _, companion := range s.WoWInfo.Companions.Data {
-			if stringInSlice(companion.SpellID, heroSpells) {
-				heroInfo.Pets = append(heroInfo.Pets, companion.ID)
-			}
-		}
-		//heroInfo.Achievements = string(achievements.Achievement)
-		c.JSON(http.StatusOK, Response{
-			StatusCode: 1,
-			Body:       heroInfo,
-		})
-	}
-}
 
 func (s *Server) AvailableWallets() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -70,7 +40,7 @@ func (s *Server) ReturnUserInfo() gin.HandlerFunc {
 			Username: username,
 		}).Find(&gifts)
 
-		currencies := WalletCurrencies()
+		currencies := payment.WalletCurrencies()
 		var wallets []database.Wallet
 		s.DB.Where(&database.Wallet{Name: username}).Find(&wallets)
 
@@ -182,7 +152,7 @@ func (s *Server) BuyHero() gin.HandlerFunc {
 		}
 		var id int
 		s.DB.Clauses(dbresolver.Use("auth")).Raw("SELECT id from account WHERE username='" + strings.ToUpper(username) + "'").Scan(&id)
-		err = SetBuyHeroTransaction(username, buyingHero.HeroInfo.Username, buyingHero.SelectedCurrency, testBuyingHero.Price, s.DB)
+		err = payment.SetBuyHeroTransaction(username, buyingHero.HeroInfo.Username, buyingHero.SelectedCurrency, testBuyingHero.Price, s.DB)
 		if err != nil {
 			c.JSON(http.StatusOK, Response{
 				StatusCode: -1,
@@ -226,7 +196,7 @@ func (s *Server) AddTransaction() gin.HandlerFunc {
 			})
 			return
 		}
-		txHash := strings.ToUpper(HashTransactionToken(tx.TransactionHash))
+		txHash := strings.ToUpper(payment.HashTransactionToken(tx.TransactionHash))
 		if txHash != tx.TXHash {
 			c.JSON(http.StatusOK, Response{
 				StatusCode: -20,
@@ -236,7 +206,7 @@ func (s *Server) AddTransaction() gin.HandlerFunc {
 		}
 		tx.Username = username
 		s.DB.Save(&tx)
-		AddBalance(username, tx.CurrencyID, tx.Amount, s.DB)
+		payment.AddBalance(username, tx.CurrencyID, tx.Amount, s.DB)
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			Body:       "Transaction Done successfully",

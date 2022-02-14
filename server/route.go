@@ -11,7 +11,7 @@ func (s *Server) Routes() {
 	s.Router.GET("/get_available_wallets", s.checkToken(), s.AvailableWallets())
 	// Login required (WoW DB)
 	s.Router.GET("/wow/get_info", s.checkToken(), s.ReturnUserInfo())
-	s.Router.GET("/wow/hero_info/:hero_name", s.checkToken(), s.ReturnHeroInfo())
+	s.Router.GET("/wow/hero_info/:hero_name", s.checkToken(), s.GetHeroInfo())
 	s.Router.GET("/wow/restore_hero/:hero_name", s.checkToken(), s.RestoreHero())
 	// Hero selling functionality
 	s.Router.POST("/wow/sell_hero", s.checkToken(), s.SellHero())
