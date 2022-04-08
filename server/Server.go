@@ -23,6 +23,7 @@ type Server struct {
 		Mounts     MountsInfo
 		Companions CompanionsInfo
 	}
+	TrinityCoreBridge map[string]string
 }
 
 func CORS() gin.HandlerFunc {
@@ -88,5 +89,6 @@ func NewServer() *Server {
 			Mounts     MountsInfo
 			Companions CompanionsInfo
 		}{Mounts: mounts, Companions: companions},
+		TrinityCoreBridge: make(map[string]string),
 	}
 }

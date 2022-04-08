@@ -10,8 +10,12 @@ import (
 )
 
 func main() {
-	// migration
 	s := server.NewServer()
+	// check env
+	if s.TrinityCoreBridge["ArenaFile"] = os.Getenv("CUSTOMARENAFILELOC"); s.TrinityCoreBridge["ArenaFile"] == "" {
+		panic("CUSTOMARENAFILELOC environment variable not set!")
+	}
+	// migration
 	s.DB = database.DbSqlMigration("aicam:021021ali@tcp(127.0.0.1:3306)/messenger_api?charset=utf8mb4&parseTime=True")
 	s.Routes()
 	log.Println(time.Now())

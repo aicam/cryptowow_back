@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/hex"
 	"errors"
+	"github.com/aicam/cryptowow_back/GMReqs"
 	"github.com/aicam/cryptowow_back/database"
 	"github.com/aicam/cryptowow_back/server/payment"
 	"github.com/gin-gonic/gin"
@@ -102,19 +103,20 @@ func (s *Server) AddUser() gin.HandlerFunc {
 			return
 		}
 
-		//gift := database.Gifts{
-		//	Username:     newUser.Username,
-		//	Description:  "Level up first hero free!",
-		//	Action:       "lvlup",
-		//	Condition:    "Register",
-		//	Used:         false,
-		//	UsedHeroName: "",
-		//}
-		//s.DB.Save(&gift)
+		gift := database.Gifts{
+			Username:     newUser.Username,
+			Description:  "The hero you choose for this gift will get all bg set by mail and level ups to 80",
+			Action:       "For Signing Up",
+			Condition:    "Register",
+			Used:         false,
+			UsedHeroName: "",
+			GiftID:       1,
+		}
+		s.DB.Save(&gift)
 		log.Println(newUser.Password)
 
 		// Uncomment
-		//GMReqs.CreateAccount(newUser.Username, newUser.Password)
+		GMReqs.CreateAccount(newUser.Username, newUser.Password)
 		newUser.Password = MD5(newUser.Password)
 		s.DB.Save(&newUser)
 		ipTrack.Checked = 1
@@ -266,7 +268,7 @@ func (s *Server) GetCSRFToken() gin.HandlerFunc {
 				})
 				return
 			}
-			csrfToken := tokenize("Ali@Kian"+time.Now().String(), ip)
+			csrfToken := ipTrack.Info
 			if ipTrack.Checked == 0 {
 				c.JSON(http.StatusOK, Response{
 					StatusCode: 1,

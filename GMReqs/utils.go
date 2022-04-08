@@ -45,3 +45,8 @@ func AddItems(title, body, heroName, items string) {
 	cm := "send items " + heroName + " \"" + title + "\" \"" + body + "\" " + items
 	makeRequest(cm)
 }
+
+func LevelUpHero(heroName string) {
+	cm := "character level " + heroName + " 80"
+	makeRequest(cm)
+}

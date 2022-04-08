@@ -37,7 +37,8 @@ func LevelUp(heroName string, heroID, classID, race int, DB *gorm.DB) {
 	default:
 		GMReqs.AddItems("Alliance weapons!", "Welcome to CryptoWoW server!!", heroName, AllianceWeapons)
 	}
-	DB.Clauses(dbresolver.Use("characters")).Exec("UPDATE characters SET level=80, money=500000 WHERE name='" + heroName + "';")
+	GMReqs.LevelUpHero(heroName)
+	DB.Clauses(dbresolver.Use("characters")).Exec("UPDATE characters SET money=5000000 WHERE name='" + heroName + "';")
 	DB.Clauses(dbresolver.Use("characters")).Exec("INSERT INTO `character_skills` (`guid`, `skill`, `value`, `max`) VALUES ('" + strconv.Itoa(heroID) + "', '293', '1', '1');")
 	DB.Clauses(dbresolver.Use("characters")).Exec("INSERT INTO `character_skills` (`guid`, `skill`, `value`, `max`) VALUES ('" + strconv.Itoa(heroID) + "', '413', '1', '1');")
 	DB.Clauses(dbresolver.Use("characters")).Exec("INSERT INTO `character_skills` (`guid`, `skill`, `value`, `max`) VALUES ('" + strconv.Itoa(heroID) + "', '45', '1', '1');")
@@ -72,9 +73,9 @@ func (s *Server) GiftHandler() gin.HandlerFunc {
 		hero.Name = heroName
 		switch gID {
 		case 1:
-			// Uncomment
-			//LevelUp(heroName, hero.HeroID, hero.Class, int(hero.Race), s.DB)
-			//TeleportHeroHome(hero, s.DB)
+			//Uncomment
+			LevelUp(heroName, hero.HeroID, hero.Class, int(hero.Race), s.DB)
+			TeleportHeroHome(hero, s.DB)
 			gift.Used = true
 			gift.UsedHeroName = heroName
 			s.DB.Save(&gift)
