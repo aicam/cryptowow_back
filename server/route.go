@@ -27,4 +27,5 @@ func (s *Server) Routes() {
 	// Gifts
 	s.Router.GET("/gift/:gift_id/:hero_name", s.checkToken(), s.GiftHandler())
 	// Bet arena join
+	s.Router.GET("/bet/arena_join/:leader1/:leader2/:arena_type", s.checkToken(), s.TrinityCoreBridgeServer.JoinNewArena())
 }

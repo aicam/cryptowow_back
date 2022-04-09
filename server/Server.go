@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"github.com/aicam/cryptowow_back/server/Bridge"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
@@ -23,7 +24,8 @@ type Server struct {
 		Mounts     MountsInfo
 		Companions CompanionsInfo
 	}
-	TrinityCoreBridge map[string]string
+	TrinityCoreBridgeVars   map[string]string
+	TrinityCoreBridgeServer Bridge.Server
 }
 
 func CORS() gin.HandlerFunc {
@@ -89,6 +91,6 @@ func NewServer() *Server {
 			Mounts     MountsInfo
 			Companions CompanionsInfo
 		}{Mounts: mounts, Companions: companions},
-		TrinityCoreBridge: make(map[string]string),
+		TrinityCoreBridgeVars: make(map[string]string),
 	}
 }
