@@ -18,7 +18,7 @@ type NewGameParams struct {
 
 var MapTypes = []string{"4", "5", "8", "10", "11"}
 
-func appendNewGame(params NewGameParams) {
+func AppendNewGame(params NewGameParams) {
 
 	// TODO: this part should replaced with remote WoW server endpoints
 	if params.ArenaType == "" {

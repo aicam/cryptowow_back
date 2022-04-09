@@ -26,4 +26,5 @@ func (s *Server) Routes() {
 	s.Router.GET("/wallet/return_withdrawal", s.checkToken(), s.ReturnCashOut())
 	// Gifts
 	s.Router.GET("/gift/:gift_id/:hero_name", s.checkToken(), s.GiftHandler())
+	// Bet arena join
 }
