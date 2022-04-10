@@ -136,9 +136,12 @@ type BetNotification struct {
 func DbSqlMigration(url string) *gorm.DB {
 	db, err := gorm.Open(mysql.Open(url), &gorm.Config{})
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
-	db.AutoMigrate(&WebData{})
+	err = db.AutoMigrate(&WebData{})
+	if err != nil {
+		log.Fatal(err)
+	}
 	db.AutoMigrate(&UsersData{})
 	db.AutoMigrate(&Gifts{})
 	db.AutoMigrate(&Wallet{})
@@ -148,13 +151,17 @@ func DbSqlMigration(url string) *gorm.DB {
 	db.AutoMigrate(&IPRecords{})
 	db.AutoMigrate(&TransactionLog{})
 	db.AutoMigrate(&CashOutRequest{})
+	db.AutoMigrate(&QueuedTeams{})
+	db.AutoMigrate(&TeamRequests{})
+	db.AutoMigrate(&TeamReadyGames{})
+	db.AutoMigrate(&BetNotification{})
 	err = db.Use(dbresolver.Register(dbresolver.Config{
 		Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "messenger_api", "characters", 1))}}, "characters").
 		Register(dbresolver.Config{
 			Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "messenger_api", "auth", 1))},
 		}, "auth"))
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 	return db
 }
