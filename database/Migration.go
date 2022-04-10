@@ -105,6 +105,34 @@ type CashOutRequest struct {
 	TX            string  `json:"tx"`
 }
 
+// Arena Bet system
+type QueuedTeams struct {
+	gorm.Model
+	TeamId        int `json:"team_id"`
+	InQueueTeamId int `json:"in_queue_team"`
+}
+
+type TeamRequests struct {
+	gorm.Model
+	TeamId          int `json:"team_id"`
+	RequestedTeamId int `json:"requested_team_id"`
+}
+
+type TeamReadyGames struct {
+	gorm.Model
+	TeamId     int `json:"team_id"`
+	OpponentId int `json:"opponent_id"`
+}
+
+type BetNotification struct {
+	gorm.Model
+	TeamId    int    `json:"team_id"`
+	Title     string `json:"title"`
+	Body      string `json:"body"`
+	Seen      bool   `json:"seen"`
+	NotifType uint8  `json:"notif_type"`
+}
+
 func DbSqlMigration(url string) *gorm.DB {
 	db, err := gorm.Open(mysql.Open(url), &gorm.Config{})
 	if err != nil {

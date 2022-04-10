@@ -4,6 +4,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"strconv"
 )
 
 type NewGameParams struct {
@@ -21,12 +22,12 @@ var MapTypes = []string{"4", "5", "8", "10", "11"}
 func AppendNewGame(params NewGameParams) {
 
 	// TODO: this part should replaced with remote WoW server endpoints
-	if params.ArenaType == "" {
+	if params.MapType == "" {
 		params.MapType = MapTypes[rand.Intn(len(MapTypes))]
 	}
-	newArenaStr := string(params.TeamID1) + "," +
+	newArenaStr := strconv.Itoa(params.TeamID1) + "," +
 		params.LeaderName1 + "," +
-		string(params.TeamID2) + "," +
+		strconv.Itoa(params.TeamID2) + "," +
 		params.LeaderName2 + "," +
 		params.ArenaType + "," +
 		params.MapType + "\n"

@@ -1,28 +1,20 @@
 package main
 
 import (
-	"log"
+	"github.com/aicam/cryptowow_back/server/Bridge"
 	"os"
 )
 
-type NewGameParams struct {
-	ArenaFilePath string
-	TeamID1       int
-	TeamID2       int
-	LeaderName1   string
-	LeaderName2   string
-	ArenaType     string `default:"random"`
-}
-
 func main() {
 	arenaFile := os.Getenv("CUSTOMARENAFILELOC")
-
-	file, err := os.OpenFile(arenaFile, os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Println(err)
+	params := Bridge.NewGameParams{
+		ArenaFilePath: arenaFile,
+		TeamID1:       1,
+		TeamID2:       2,
+		LeaderName1:   "Matarsak",
+		LeaderName2:   "Koonde",
+		ArenaType:     "2",
+		//MapType:       "4",
 	}
-	defer file.Close()
-	if _, err := file.WriteString("second line"); err != nil {
-		log.Fatal(err)
-	}
+	Bridge.AppendNewGame(params)
 }
