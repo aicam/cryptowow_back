@@ -1,20 +1,27 @@
 package Bridge
 
 import (
+	"fmt"
 	"github.com/aicam/cryptowow_back/database"
-	"gorm.io/gorm"
 )
 
-type BetEvents struct {
-	EventType uint8
-	DB        *gorm.DB
-}
-
-func (b *BetEvents) InviteEvent(TeamIdA, TeamIdB int) {
+func (s *Server) InviteOperation(inviter, invited int, invitedName string, betAmount float32) {
 	newQueued := database.QueuedTeams{
-		TeamId:        TeamIdB,
-		InQueueTeamId: TeamIdA,
+		TeamId:        invited,
+		InQueueTeamId: inviter,
 	}
-	b.DB.Save(&newQueued)
-
+	notif := database.BetNotification{
+		TeamId:    invited,
+		Title:     "New match request",
+		Body:      fmt.Sprintf("Team %s invited you to a %f bet!", invitedName, betAmount),
+		Seen:      false,
+		NotifType: 0,
+	}
+	newRequest := database.TeamRequests{
+		TeamId:          inviter,
+		RequestedTeamId: invited,
+	}
+	s.DB.Save(&newRequest)
+	s.DB.Save(&notif)
+	s.DB.Save(&newQueued)
 }
