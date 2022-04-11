@@ -25,3 +25,26 @@ func (s *Server) InviteOperation(inviter, invited int, invitedName string, betAm
 	s.DB.Save(&notif)
 	s.DB.Save(&newQueued)
 }
+
+func (s *Server) AcceptInvitation(inviter, invited int) error {
+	var queued database.QueuedTeams
+	if err := s.DB.Where(&database.QueuedTeams{TeamId: invited,
+		InQueueTeamId: inviter}).First(&queued).Error; err != nil {
+		return err
+	}
+	s.DB.Delete(&queued)
+	var request database.TeamRequests
+	if err := s.DB.Where(&database.TeamRequests{TeamId: inviter,
+		RequestedTeamId: invited}).First(&queued).Error; err != nil {
+		return err
+	}
+	s.DB.Delete(&request)
+	s.DB.Save(&database.TeamReadyGames{
+		TeamId:     inviter,
+		OpponentId: invited,
+	}).Save(database.TeamReadyGames{
+		TeamId:     invited,
+		OpponentId: inviter,
+	})
+	return nil
+}
