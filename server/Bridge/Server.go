@@ -1,7 +1,13 @@
 package Bridge
 
-import "gorm.io/gorm"
+import (
+	"context"
+	"github.com/go-redis/redis/v8"
+	"gorm.io/gorm"
+)
 
 type Server struct {
-	DB *gorm.DB
+	DB      *gorm.DB
+	Redis   *redis.Client
+	Context context.Context
 }

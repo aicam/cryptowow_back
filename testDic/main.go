@@ -1,38 +1,32 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"github.com/go-redis/redis/v8"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"net/http"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var ctx = context.Background()
+type PrometheusParams struct {
+	Counters map[string]prometheus.Counter
+	Gauges   map[string]prometheus.Gauge
+}
 
 func main() {
-
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
+	pp := PrometheusParams{}
+	pp.Counters = make(map[string]prometheus.Counter)
+	pp.Gauges = make(map[string]prometheus.Gauge)
+	pp.Counters["opc"] = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "opc",
+		Help: "Test Counter",
 	})
-
-	err := rdb.Set(ctx, "key", "value", 0).Err()
-	if err != nil {
-		panic(err)
-	}
-
-	val, err := rdb.Get(ctx, "key").Result()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("key", val)
-
-	val2, err := rdb.Get(ctx, "key2").Result()
-	if err == redis.Nil {
-		fmt.Println("key2 does not exist")
-	} else if err != nil {
-		panic(err)
-	} else {
-		fmt.Println("key2", val2)
-	}
+	pp.Gauges["opg"] = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "opg",
+		Help: "Test Gauge",
+	})
+	pp.Counters["opc"].Inc()
+	pp.Gauges["opg"].Set(22.0)
+	http.Handle("/metrics", promhttp.Handler())
+	http.ListenAndServe(":2112", nil)
 }
