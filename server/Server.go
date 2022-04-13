@@ -5,6 +5,7 @@ import (
 	"github.com/aicam/cryptowow_back/server/Bridge"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"io/ioutil"
 	"log"
@@ -46,8 +47,18 @@ func CORS() gin.HandlerFunc {
 	}
 }
 
+func SetupLogger() {
+	loggerFile, e := os.Create("Server_Logs.txt")
+	if e != nil {
+		log.Fatal(e)
+	}
+	logrus.SetFormatter(&logrus.JSONFormatter{})
+	logrus.SetOutput(loggerFile)
+}
+
 // Here we create our new server
 func NewServer() *Server {
+	SetupLogger()
 	router := gin.Default()
 	// here we opened cors for all
 	router.Use(CORS())

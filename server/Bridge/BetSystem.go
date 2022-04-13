@@ -26,6 +26,8 @@ func (s *Server) InviteOperation(inviter, invited int, invitedName string, betAm
 	s.DB.Save(&newRequest)
 	s.DB.Save(&notif)
 	s.DB.Save(&newQueued)
+	s.PP.Counters["bet_system_invite_operation_counter"].Inc()
+	s.PP.Gauges["bet_system_invite_operation_in_progress"].Inc()
 }
 
 func (s *Server) AcceptInvitation(inviter, invited int, inviterName string) error {
@@ -59,7 +61,9 @@ func (s *Server) AcceptInvitation(inviter, invited int, inviterName string) erro
 		NotifType: 0,
 	}
 	s.DB.Save(&notif)
-
+	s.PP.Counters["bet_system_accept_operation_counter"].Inc()
+	s.PP.Gauges["bet_system_accept_operation_in_progress"].Inc()
+	s.PP.Gauges["bet_system_invite_operation_in_progress"].Add(-1)
 	return nil
 }
 
@@ -68,5 +72,13 @@ func (s *Server) StartGame(inviter, invited int) error {
 	if err != nil {
 		return err
 	}
+	s.DB.Delete(&database.TeamReadyGames{
+		TeamId:     inviter,
+		OpponentId: invited,
+	}).Delete(&database.TeamReadyGames{
+		TeamId:     invited,
+		OpponentId: inviter,
+	})
+	s.PP.Gauges["bet_system_accept_operation_in_progress"].Add(-1)
 	return nil
 }
