@@ -120,8 +120,8 @@ type TeamRequests struct {
 
 type TeamReadyGames struct {
 	gorm.Model
-	TeamId     int `json:"team_id"`
-	OpponentId int `json:"opponent_id"`
+	InviterTeam int `json:"team_id"`
+	InvitedTeam int `json:"opponent_id"`
 }
 
 type BetNotification struct {

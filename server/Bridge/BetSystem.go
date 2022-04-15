@@ -46,11 +46,8 @@ func (s *Server) AcceptInvitation(inviter, invited int, inviterName string) erro
 	s.DB.Delete(&request)
 
 	s.DB.Save(&database.TeamReadyGames{
-		TeamId:     inviter,
-		OpponentId: invited,
-	}).Save(database.TeamReadyGames{
-		TeamId:     invited,
-		OpponentId: inviter,
+		InviterTeam: inviter,
+		InvitedTeam: invited,
 	})
 
 	notif := database.BetNotification{
@@ -67,18 +64,37 @@ func (s *Server) AcceptInvitation(inviter, invited int, inviterName string) erro
 	return nil
 }
 
-func (s *Server) StartGame(inviter, invited int) error {
-	err := s.Redis.Set(s.Context, strconv.Itoa(inviter), strconv.Itoa(invited), 40*time.Second).Err()
+func (s *Server) StartGame(bucketID uint) error {
+	err := s.Redis.Set(s.Context, strconv.Itoa(int(bucketID)), "00", time.Duration(READYCHECKCOUNTER)*time.Second).Err()
 	if err != nil {
 		return err
 	}
-	s.DB.Delete(&database.TeamReadyGames{
-		TeamId:     inviter,
-		OpponentId: invited,
-	}).Delete(&database.TeamReadyGames{
-		TeamId:     invited,
-		OpponentId: inviter,
-	})
 	s.PP.Gauges["bet_system_accept_operation_in_progress"].Add(-1)
 	return nil
+}
+
+func (s *Server) StartGameAcceptHandler(bucketID uint, acceptedID int) (error, int) {
+	stat, err := s.Redis.Get(s.Context, strconv.Itoa(int(bucketID))).Result()
+	if err != nil {
+		return err, 0
+	}
+	var bucketTeam database.TeamReadyGames
+	err = s.DB.Where("id = " + strconv.Itoa(int(bucketID))).First(&bucketTeam).Error
+	if err != nil {
+		return err, -1
+	}
+	var acceptedTeam uint8
+	if acceptedTeam = 1; acceptedID == bucketTeam.InviterTeam {
+		acceptedTeam = 0
+	}
+	var newStat string
+	if newStat = stat[:1] + "1"; acceptedTeam == 0 {
+		newStat = "1" + stat[1:]
+	}
+
+	// check result
+	if newStat == "11" {
+		return nil, 1
+	}
+	return nil, 0
 }

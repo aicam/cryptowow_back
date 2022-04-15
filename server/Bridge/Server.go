@@ -13,3 +13,5 @@ type Server struct {
 	Context context.Context
 	PP      Prometheus.PrometheusParams
 }
+
+var READYCHECKCOUNTER = 40

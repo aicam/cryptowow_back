@@ -2,9 +2,7 @@ package main
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/sirupsen/logrus"
 	"log"
-	"os"
 )
 
 type PrometheusParams struct {
@@ -13,13 +11,16 @@ type PrometheusParams struct {
 }
 
 func main() {
-	myfile, e := os.Create("log.txt")
-	if e != nil {
-		log.Fatal(e)
-	}
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-	logrus.SetOutput(myfile)
-	logrus.WithFields(logrus.Fields{"test": 2, "test_s": "dsada"}).Info("detail test")
+	a := "10"
+	a = a[:1] + "1"
+	log.Print(a)
+	//myfile, e := os.Create("log.txt")
+	//if e != nil {
+	//	log.Fatal(e)
+	//}
+	//logrus.SetFormatter(&logrus.JSONFormatter{})
+	//logrus.SetOutput(myfile)
+	//logrus.WithFields(logrus.Fields{"test": 2, "test_s": "dsada"}).Info("detail test")
 	//pp := PrometheusParams{}
 	//pp.Counters = make(map[string]prometheus.Counter)
 	//pp.Gauges = make(map[string]prometheus.Gauge)
