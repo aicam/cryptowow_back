@@ -1,4 +1,4 @@
-package Bridge
+package ArenaService
 
 type ArenaTeam struct {
 	ArenaTeamID int    `json:"arena_team_id" gorm:"column:arenaTeamId"`
@@ -7,4 +7,11 @@ type ArenaTeam struct {
 	ArenaType   int16  `json:"arena_type" gorm:"column:type"`
 	SeasonGames int16  `json:"season_games" gorm:"column:seasonGames"`
 	SeasonWins  int16  `json:"season_wins" gorm:"column:seasonWins"`
+}
+
+type InviteRequest struct {
+	Inviter     int    `json:"inviter"`
+	Invited     int    `json:"invited"`
+	BetAmount   int    `json:"bet_amount"`
+	BetCurrency string `json:"bet_currency"`
 }

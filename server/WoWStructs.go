@@ -1,17 +1,31 @@
 package server
 
 type Hero struct {
-	AccountID  int    `json:"account_id" gorm:"column:account"`
-	HeroID     int    `json:"hero_id" gorm:"column:guid"`
-	Name       string `json:"name"`
-	Race       uint   `json:"race"`
-	Gender     bool   `json:"gender"`
-	Level      int    `json:"level"`
-	Class      int    `json:"class"`
-	Online     bool   `json:"online"`
-	Money      int    `json:"money"`
-	TotalTime  int    `json:"total_time" gorm:"column:totaltime"`
-	TotalKills int    `json:"total_kills" gorm:"column:totalKills"`
+	AccountID         int              `json:"account_id" gorm:"column:account"`
+	HeroID            int              `json:"hero_id" gorm:"column:guid"`
+	Name              string           `json:"name"`
+	Race              uint             `json:"race"`
+	Gender            bool             `json:"gender"`
+	Level             int              `json:"level"`
+	Class             int              `json:"class"`
+	Online            bool             `json:"online"`
+	Money             int              `json:"money"`
+	TotalTime         int              `json:"total_time" gorm:"column:totaltime"`
+	TotalKills        int              `json:"total_kills" gorm:"column:totalKills"`
+	ArenaTeamsCaptain []HeroArenaTeams `gorm:"-"`
+}
+
+type HeroArenaTeams struct {
+	TeamId          uint   `json:"team_id" gorm:"column:arenaTeamId"`
+	Name            string `json:"name" gorm:"column:name"`
+	Type            uint8  `json:"type" gorm:"column:type"`
+	Rating          uint8  `json:"rating" gorm:"column:rating"`
+	SeasonGames     uint8  `json:"season_games" gorm:"column:seasonGames"`
+	SeasonWins      uint8  `json:"season_wins" gorm:"column:seasonWins"`
+	WeekGames       uint8  `json:"week_games" gorm:"column:weekGames"`
+	WeekWins        uint8  `json:"week_wins" gorm:"column:weekWins"`
+	Rank            int    `json:"rank" gorm:"column:rank"`
+	BackgroundColor int    `json:"background_color" gorm:"column:backgroundColor"`
 }
 
 type HeroInfo struct {

@@ -31,7 +31,7 @@ func (s *Server) ReturnUserInfo() gin.HandlerFunc {
 		var id int
 		s.DB.Clauses(dbresolver.Use("auth")).Raw("SELECT id from account WHERE username='" + strings.ToUpper(username) + "'").Scan(&id)
 		var heros []Hero
-		s.DB.Raw("SELECT name, race, gender, level, class FROM characters WHERE account=" + strconv.Itoa(id)).Scan(&heros)
+		s.DB.Raw("SELECT guid, name, race, gender, level, class FROM characters WHERE account=" + strconv.Itoa(id)).Scan(&heros)
 
 		var sellingHeros []database.SellingHeros
 		s.DB.Where(&database.SellingHeros{Username: username}).Find(&sellingHeros)
@@ -44,6 +44,14 @@ func (s *Server) ReturnUserInfo() gin.HandlerFunc {
 		currencies := payment.WalletCurrencies()
 		var wallets []database.Wallet
 		s.DB.Where(&database.Wallet{Name: username}).Find(&wallets)
+
+		for i, hero := range heros {
+			arenaTeams := []HeroArenaTeams{}
+			s.DB.Clauses(dbresolver.Use("characters")).Raw("SELECT `arenaTeamId`, " +
+				"`name`, `type`, `rating`, `seasonGames`," +
+				" `seasonWins`, `weekGames`, `weekWins`, `rank`, `backgroundColor` FROM arena_team WHERE `captainGuid`=" + strconv.Itoa(hero.HeroID)).Find(&arenaTeams)
+			heros[i].ArenaTeamsCaptain = arenaTeams
+		}
 
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,

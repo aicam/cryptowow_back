@@ -1,4 +1,4 @@
-package Bridge
+package ArenaService
 
 import (
 	"log"

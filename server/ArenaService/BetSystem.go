@@ -1,4 +1,4 @@
-package Bridge
+package ArenaService
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func (s *Server) InviteOperation(inviter, invited int, invitedName string, betAmount float32) {
+func (s *Service) InviteOperation(inviter, invited int, invitedName string, betAmount float32) {
 	newQueued := database.QueuedTeams{
 		TeamId:        invited,
 		InQueueTeamId: inviter,
@@ -26,11 +26,13 @@ func (s *Server) InviteOperation(inviter, invited int, invitedName string, betAm
 	s.DB.Save(&newRequest)
 	s.DB.Save(&notif)
 	s.DB.Save(&newQueued)
-	s.PP.Counters["bet_system_invite_operation_counter"].Inc()
-	s.PP.Gauges["bet_system_invite_operation_in_progress"].Inc()
+
+	// TODO: uncomment.prometheus
+	//s.PP.Counters["bet_system_invite_operation_counter"].Inc()
+	//s.PP.Gauges["bet_system_invite_operation_in_progress"].Inc()
 }
 
-func (s *Server) AcceptInvitation(inviter, invited int, inviterName string) error {
+func (s *Service) AcceptInvitation(inviter, invited int, inviterName string) error {
 	var queued database.QueuedTeams
 	if err := s.DB.Where(&database.QueuedTeams{TeamId: invited,
 		InQueueTeamId: inviter}).First(&queued).Error; err != nil {
@@ -40,7 +42,7 @@ func (s *Server) AcceptInvitation(inviter, invited int, inviterName string) erro
 
 	var request database.TeamRequests
 	if err := s.DB.Where(&database.TeamRequests{TeamId: inviter,
-		RequestedTeamId: invited}).First(&queued).Error; err != nil {
+		RequestedTeamId: invited}).First(&request).Error; err != nil {
 		return err
 	}
 	s.DB.Delete(&request)
@@ -58,22 +60,24 @@ func (s *Server) AcceptInvitation(inviter, invited int, inviterName string) erro
 		NotifType: 0,
 	}
 	s.DB.Save(&notif)
-	s.PP.Counters["bet_system_accept_operation_counter"].Inc()
-	s.PP.Gauges["bet_system_accept_operation_in_progress"].Inc()
-	s.PP.Gauges["bet_system_invite_operation_in_progress"].Add(-1)
+	// TODO: uncomment.prometheus
+	//s.PP.Counters["bet_system_accept_operation_counter"].Inc()
+	//s.PP.Gauges["bet_system_accept_operation_in_progress"].Inc()
+	//s.PP.Gauges["bet_system_invite_operation_in_progress"].Add(-1)
 	return nil
 }
 
-func (s *Server) StartGame(bucketID uint) error {
+func (s *Service) StartGame(bucketID uint) error {
 	err := s.Redis.Set(s.Context, strconv.Itoa(int(bucketID)), "00", time.Duration(READYCHECKCOUNTER)*time.Second).Err()
 	if err != nil {
 		return err
 	}
-	s.PP.Gauges["bet_system_accept_operation_in_progress"].Add(-1)
+	// TODO: uncomment.prometheus
+	//s.PP.Gauges["bet_system_accept_operation_in_progress"].Add(-1)
 	return nil
 }
 
-func (s *Server) StartGameAcceptHandler(bucketID uint, acceptedID int) (error, int) {
+func (s *Service) StartGameAcceptHandler(bucketID uint, acceptedID int) (error, int) {
 	stat, err := s.Redis.Get(s.Context, strconv.Itoa(int(bucketID))).Result()
 	if err != nil {
 		return err, 0
@@ -92,15 +96,15 @@ func (s *Server) StartGameAcceptHandler(bucketID uint, acceptedID int) (error, i
 		newStat = "1" + stat[1:]
 	}
 
+	s.Redis.Set(s.Context, strconv.Itoa(int(bucketID)), newStat, time.Duration(READYCHECKCOUNTER)*time.Second)
 	// check result
 	if newStat == "11" {
 		return nil, 1
 	}
-	s.Redis.Set(s.Context, strconv.Itoa(int(bucketID)), newStat, time.Duration(READYCHECKCOUNTER)*time.Second)
 	return nil, 0
 }
 
-func (s *Server) IsStarted(bucketID uint) int {
+func (s *Service) IsStarted(bucketID uint) int {
 	stat, err := s.Redis.Get(s.Context, strconv.Itoa(int(bucketID))).Result()
 	if err != nil {
 		return -1

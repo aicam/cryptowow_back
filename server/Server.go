@@ -2,7 +2,7 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/aicam/cryptowow_back/server/Bridge"
+	"github.com/aicam/cryptowow_back/server/ArenaService"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
@@ -26,7 +26,7 @@ type Server struct {
 		Companions CompanionsInfo
 	}
 	TrinityCoreBridgeVars   map[string]string
-	TrinityCoreBridgeServer Bridge.Server
+	TrinityCoreBridgeServer ArenaService.Service
 }
 
 func CORS() gin.HandlerFunc {
