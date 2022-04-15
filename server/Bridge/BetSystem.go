@@ -96,5 +96,17 @@ func (s *Server) StartGameAcceptHandler(bucketID uint, acceptedID int) (error, i
 	if newStat == "11" {
 		return nil, 1
 	}
+	s.Redis.Set(s.Context, strconv.Itoa(int(bucketID)), newStat, time.Duration(READYCHECKCOUNTER)*time.Second)
 	return nil, 0
+}
+
+func (s *Server) IsStarted(bucketID uint) int {
+	stat, err := s.Redis.Get(s.Context, strconv.Itoa(int(bucketID))).Result()
+	if err != nil {
+		return -1
+	}
+	if stat == "11" {
+		return 1
+	}
+	return 0
 }

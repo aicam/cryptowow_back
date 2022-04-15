@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
-	"log"
 )
 
 type PrometheusParams struct {
@@ -11,9 +10,7 @@ type PrometheusParams struct {
 }
 
 func main() {
-	a := "10"
-	a = a[:1] + "1"
-	log.Print(a)
+
 	//myfile, e := os.Create("log.txt")
 	//if e != nil {
 	//	log.Fatal(e)
