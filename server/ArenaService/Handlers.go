@@ -1,9 +1,11 @@
 package ArenaService
 
 import (
+	"github.com/aicam/cryptowow_back/database"
 	"github.com/aicam/cryptowow_back/server/LogService"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strings"
 )
 
 func actionResult(statusCode int, body string) struct {
@@ -51,7 +53,7 @@ func (s *Service) InviteTeam() gin.HandlerFunc {
 			return
 		}
 
-		_, err = CheckQueueTeam(s.DB, reqParams.Inviter, reqParams.Invited)
+		err = CheckQueueTeam(s.DB, reqParams.Inviter, reqParams.Invited)
 		if err == nil {
 			c.JSON(http.StatusBadRequest, actionResult(-8, "error in parsing"))
 			LogService.LogPotentialCyberAttack(c, "ArenaService_Invite_Duplicate_Check")
@@ -66,7 +68,7 @@ func (s *Service) InviteTeam() gin.HandlerFunc {
 
 func (s *Service) AcceptInvitation() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var reqParams AcceptInvitationRequest
+		var reqParams GeneralInvitationRequest
 		err := c.BindJSON(&reqParams)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, actionResult(-1, "parsing error"))
@@ -98,10 +100,83 @@ func (s *Service) AcceptInvitation() gin.HandlerFunc {
 		err = s.AcceptInvitationOperation(reqParams.Inviter, reqParams.Invited, getUsernameByArenaTeamID(s.DB, reqParams.Inviter))
 		if err != nil {
 			c.JSON(http.StatusBadGateway, actionResult(-1, "Service unavailable"))
+			LogService.LogCrash("MySql", "ArenaService_Accept_Invitation")
+			return
+		}
+
+		c.JSON(http.StatusOK, actionResult(1, "Accepted successfully!"))
+	}
+}
+
+func (s *Service) StartGame() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var reqParams GeneralInvitationRequest
+		err := c.BindJSON(&reqParams)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, actionResult(-1, "parsing error"))
+			return
+		}
+
+		username := strings.ToUpper(c.GetHeader("username"))
+		usernameInviter := getUsernameByArenaTeamID(s.DB, reqParams.Inviter)
+		usernameInvited := getUsernameByArenaTeamID(s.DB, reqParams.Invited)
+		if username != usernameInvited && username != usernameInviter {
+			c.JSON(http.StatusBadRequest, actionResult(-6, "error in parsing"))
+			LogService.LogPotentialCyberAttack(c, "ArenaService_Start_Game_Username_Check")
+			return
+		}
+
+		readyBucket, err := CheckTeamReady(s.DB, reqParams.Inviter, reqParams.Invited)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, actionResult(-6, "error in parsing"))
+			LogService.LogPotentialCyberAttack(c, "ArenaService_Start_Game_Exist_Check")
+			return
+		}
+
+		err = s.StartGameOperation(readyBucket.ID)
+		if err != nil {
+			c.JSON(http.StatusBadGateway, actionResult(-1, "Service unavailable"))
 			LogService.LogCrash("Redis", "ArenaService_Accept_Invitation")
 			return
 		}
-		c.JSON(http.StatusOK, actionResult(1, "Accepted successfully!"))
 
+		c.JSON(http.StatusOK, actionResult(1, "Game started successfully"))
+	}
+}
+
+func (s *Service) AcceptStartGame() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var reqParams AcceptStartGameRequest
+		err := c.BindJSON(&reqParams)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, actionResult(-1, "parsing error"))
+			return
+		}
+
+		username := strings.ToUpper(c.GetHeader("username"))
+
+		if username != getUsernameByArenaTeamID(s.DB, reqParams.TeamID) {
+			c.JSON(http.StatusBadRequest, actionResult(-6, "error in parsing"))
+			LogService.LogPotentialCyberAttack(c, "ArenaService_Accept_Start_Game_Username_Check")
+			return
+		}
+		var readyTeam database.TeamReadyGames
+		readyTeam, err = CheckTeamReady(s.DB, reqParams.TeamID, reqParams.OpponentID)
+		if err != nil {
+			readyTeam, err = CheckTeamReady(s.DB, reqParams.OpponentID, reqParams.TeamID)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, actionResult(-10, "error in parsing"))
+				LogService.LogPotentialCyberAttack(c, "ArenaService_Accept_Start_Game_Bucket_Check")
+				return
+			}
+		}
+
+		err = s.StartGameAcceptHandler(readyTeam.ID, reqParams.TeamID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, actionResult(-1, "Time is over!"))
+			return
+		}
+
+		c.JSON(http.StatusOK, actionResult(1, "Accepted successfully! Be Ready...."))
 	}
 }

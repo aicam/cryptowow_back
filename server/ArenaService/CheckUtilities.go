@@ -75,3 +75,16 @@ func CheckTeamRequest(DB *gorm.DB, inviter, invited int) error {
 	}
 	return nil
 }
+
+func CheckTeamReady(DB *gorm.DB, inviter, invited int) (database.TeamReadyGames, error) {
+	var requestTeam database.TeamReadyGames
+	err := DB.Where(database.TeamReadyGames{
+		InviterTeam: inviter,
+		InvitedTeam: invited,
+	}).First(&requestTeam).Error
+
+	if err != nil {
+		return database.TeamReadyGames{}, err
+	}
+	return requestTeam, nil
+}

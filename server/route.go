@@ -28,4 +28,7 @@ func (s *Server) Routes() {
 	s.Router.GET("/gift/:gift_id/:hero_name", s.checkToken(), s.GiftHandler())
 	// Bet arena join
 	s.Router.POST("/bet/arena_invite/", s.checkToken(), s.TrinityCoreBridgeServer.InviteTeam())
+	s.Router.POST("/bet/arena_accept/", s.checkToken(), s.TrinityCoreBridgeServer.AcceptInvitation())
+	s.Router.POST("/bet/start_game/", s.checkToken(), s.TrinityCoreBridgeServer.StartGame())
+	s.Router.POST("/bet/accept_start_game/", s.checkToken(), s.TrinityCoreBridgeServer.AcceptStartGame())
 }

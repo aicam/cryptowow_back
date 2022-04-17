@@ -16,7 +16,12 @@ type InviteRequest struct {
 	BetCurrency string  `json:"bet_currency"`
 }
 
-type AcceptInvitationRequest struct {
+type GeneralInvitationRequest struct {
 	Inviter int `json:"inviter"`
 	Invited int `json:"invited"`
+}
+
+type AcceptStartGameRequest struct {
+	TeamID     int `json:"team_id"`
+	OpponentID int `json:"opponent_id"`
 }

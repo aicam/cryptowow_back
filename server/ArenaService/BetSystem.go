@@ -67,7 +67,7 @@ func (s *Service) AcceptInvitationOperation(inviter, invited int, inviterName st
 	return nil
 }
 
-func (s *Service) StartGame(bucketID uint) error {
+func (s *Service) StartGameOperation(bucketID uint) error {
 	err := s.Redis.Set(s.Context, strconv.Itoa(int(bucketID)), "00", time.Duration(READYCHECKCOUNTER)*time.Second).Err()
 	if err != nil {
 		return err
@@ -77,15 +77,15 @@ func (s *Service) StartGame(bucketID uint) error {
 	return nil
 }
 
-func (s *Service) StartGameAcceptHandler(bucketID uint, acceptedID int) (error, int) {
+func (s *Service) StartGameAcceptHandler(bucketID uint, acceptedID int) error {
 	stat, err := s.Redis.Get(s.Context, strconv.Itoa(int(bucketID))).Result()
 	if err != nil {
-		return err, 0
+		return err
 	}
 	var bucketTeam database.TeamReadyGames
 	err = s.DB.Where("id = " + strconv.Itoa(int(bucketID))).First(&bucketTeam).Error
 	if err != nil {
-		return err, -1
+		return err
 	}
 	var acceptedTeam uint8
 	if acceptedTeam = 1; acceptedID == bucketTeam.InviterTeam {
@@ -99,9 +99,9 @@ func (s *Service) StartGameAcceptHandler(bucketID uint, acceptedID int) (error, 
 	s.Redis.Set(s.Context, strconv.Itoa(int(bucketID)), newStat, time.Duration(READYCHECKCOUNTER)*time.Second)
 	// check result
 	if newStat == "11" {
-		return nil, 1
+		return nil
 	}
-	return nil, 0
+	return nil
 }
 
 func (s *Service) IsStarted(bucketID uint) int {
