@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func (s *Service) InviteOperation(inviter, invited int, invitedName string, betAmount float32) {
+func (s *Service) InviteOperation(inviter, invited int, invitedName string, betAmount float64, currency string) {
 	newQueued := database.QueuedTeams{
 		TeamId:        invited,
 		InQueueTeamId: inviter,
@@ -32,7 +32,7 @@ func (s *Service) InviteOperation(inviter, invited int, invitedName string, betA
 	//s.PP.Gauges["bet_system_invite_operation_in_progress"].Inc()
 }
 
-func (s *Service) AcceptInvitation(inviter, invited int, inviterName string) error {
+func (s *Service) AcceptInvitationOperation(inviter, invited int, inviterName string) error {
 	var queued database.QueuedTeams
 	if err := s.DB.Where(&database.QueuedTeams{TeamId: invited,
 		InQueueTeamId: inviter}).First(&queued).Error; err != nil {

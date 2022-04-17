@@ -15,10 +15,6 @@ func main() {
 	if s.TrinityCoreBridgeVars["ArenaFile"] = os.Getenv("CUSTOMARENAFILELOC"); s.TrinityCoreBridgeVars["ArenaFile"] == "" {
 		panic("CUSTOMARENAFILELOC environment variable not set!")
 	}
-	// migration
-	s.DB = database.DbSqlMigration("aicam:021021ali@tcp(127.0.0.1:3306)/messenger_api?charset=utf8mb4&parseTime=True")
-	// currently we use a db connection in both
-	s.TrinityCoreBridgeServer.DB = s.DB
 	s.Routes()
 	log.Println(time.Now())
 	var user database.UsersData

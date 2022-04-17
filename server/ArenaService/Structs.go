@@ -10,8 +10,13 @@ type ArenaTeam struct {
 }
 
 type InviteRequest struct {
-	Inviter     int    `json:"inviter"`
-	Invited     int    `json:"invited"`
-	BetAmount   int    `json:"bet_amount"`
-	BetCurrency string `json:"bet_currency"`
+	Inviter     int     `json:"inviter"`
+	Invited     int     `json:"invited"`
+	BetAmount   float64 `json:"bet_amount"`
+	BetCurrency string  `json:"bet_currency"`
+}
+
+type AcceptInvitationRequest struct {
+	Inviter int `json:"inviter"`
+	Invited int `json:"invited"`
 }

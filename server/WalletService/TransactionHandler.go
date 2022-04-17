@@ -1,4 +1,4 @@
-package payment
+package WalletService
 
 import (
 	"crypto/sha1"
@@ -44,6 +44,17 @@ func ReduceBalance(username, currencyID string, amount float64, DB *gorm.DB) err
 	wallet.Amount -= amount
 	DB.Save(wallet)
 	return nil
+}
+
+func GetAccountBalance(username, selectedCurrency string, DB *gorm.DB) float64 {
+	var wallets []database.Wallet
+	DB.Where(&database.Wallet{Name: username}).Find(&wallets)
+	for _, wallet := range wallets {
+		if wallet.CurrencyID == selectedCurrency {
+			return wallet.Amount
+		}
+	}
+	return 0
 }
 
 func SetBuyHeroTransaction(username, vendorUsername, selectedCurrency, price string, DB *gorm.DB) error {

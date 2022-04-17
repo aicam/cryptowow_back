@@ -2,7 +2,7 @@ package server
 
 import (
 	"github.com/aicam/cryptowow_back/database"
-	"github.com/aicam/cryptowow_back/server/payment"
+	"github.com/aicam/cryptowow_back/server/WalletService"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -33,7 +33,7 @@ func (s *Server) AddCashOut() gin.HandlerFunc {
 		if err != nil {
 			return
 		}
-		err = payment.ReduceBalance(username, co.CurrencyID, co.Amount, s.DB)
+		err = WalletService.ReduceBalance(username, co.CurrencyID, co.Amount, s.DB)
 		if err != nil {
 			c.JSON(http.StatusOK, Response{
 				StatusCode: -1,

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/aicam/cryptowow_back/GMReqs"
 	"github.com/aicam/cryptowow_back/database"
-	"github.com/aicam/cryptowow_back/server/payment"
+	"github.com/aicam/cryptowow_back/server/WalletService"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
@@ -41,7 +41,7 @@ func (s *Server) ReturnUserInfo() gin.HandlerFunc {
 			Username: username,
 		}).Find(&gifts)
 
-		currencies := payment.WalletCurrencies()
+		currencies := WalletService.WalletCurrencies()
 		var wallets []database.Wallet
 		s.DB.Where(&database.Wallet{Name: username}).Find(&wallets)
 
@@ -102,7 +102,7 @@ func (s *Server) AddUser() gin.HandlerFunc {
 			}
 
 		}
-
+		newUser.Username = strings.ToUpper(newUser.Username)
 		if err := s.DB.Where(&database.UsersData{Username: newUser.Username}).First(&existUser).Error; !errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusOK, Response{
 				StatusCode: 0,
@@ -162,7 +162,7 @@ func (s *Server) BuyHero() gin.HandlerFunc {
 		}
 		var id int
 		s.DB.Clauses(dbresolver.Use("auth")).Raw("SELECT id from account WHERE username='" + strings.ToUpper(username) + "'").Scan(&id)
-		err = payment.SetBuyHeroTransaction(username, buyingHero.HeroInfo.Username, buyingHero.SelectedCurrency, testBuyingHero.Price, s.DB)
+		err = WalletService.SetBuyHeroTransaction(username, buyingHero.HeroInfo.Username, buyingHero.SelectedCurrency, testBuyingHero.Price, s.DB)
 		if err != nil {
 			c.JSON(http.StatusOK, Response{
 				StatusCode: -1,
@@ -206,7 +206,7 @@ func (s *Server) AddTransaction() gin.HandlerFunc {
 			})
 			return
 		}
-		txHash := strings.ToUpper(payment.HashTransactionToken(tx.TransactionHash))
+		txHash := strings.ToUpper(WalletService.HashTransactionToken(tx.TransactionHash))
 		if txHash != tx.TXHash {
 			c.JSON(http.StatusOK, Response{
 				StatusCode: -20,
@@ -216,7 +216,7 @@ func (s *Server) AddTransaction() gin.HandlerFunc {
 		}
 		tx.Username = username
 		s.DB.Save(&tx)
-		payment.AddBalance(username, tx.CurrencyID, tx.Amount, s.DB)
+		WalletService.AddBalance(username, tx.CurrencyID, tx.Amount, s.DB)
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			Body:       "Transaction Done successfully",

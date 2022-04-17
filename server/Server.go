@@ -1,9 +1,13 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
+	"github.com/aicam/cryptowow_back/Prometheus"
+	"github.com/aicam/cryptowow_back/database"
 	"github.com/aicam/cryptowow_back/server/ArenaService"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -48,7 +52,7 @@ func CORS() gin.HandlerFunc {
 }
 
 func SetupLogger() {
-	loggerFile, e := os.Create("Server_Logs.txt")
+	loggerFile, e := os.OpenFile("Server_Logs.txt", os.O_APPEND|os.O_WRONLY, 0644)
 	if e != nil {
 		log.Fatal(e)
 	}
@@ -95,13 +99,26 @@ func NewServer() *Server {
 		os.Exit(-1)
 	}
 
+	// generate database gorm structure
+	log.Println(os.Getenv("MYSQLCONNECTION"))
+	DBStruct := database.DbSqlMigration(os.Getenv("MYSQLCONNECTION"))
+
+	// redis server
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: os.Getenv("REDISPASS"), // no password set
+		DB:       0,                      // use default DB
+	})
+
 	return &Server{
-		DB:     nil,
+		DB:     DBStruct,
 		Router: router,
 		WoWInfo: struct {
 			Mounts     MountsInfo
 			Companions CompanionsInfo
 		}{Mounts: mounts, Companions: companions},
 		TrinityCoreBridgeVars: make(map[string]string),
+		TrinityCoreBridgeServer: ArenaService.Service{DB: DBStruct, Redis: rdb, Context: context.Background(),
+			PP: Prometheus.GetIndexServerPrometheusParams()},
 	}
 }
