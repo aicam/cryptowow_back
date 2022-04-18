@@ -5,34 +5,10 @@ import (
 	"github.com/aicam/cryptowow_back/server/WalletService"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
+	"log"
 	"strconv"
 	"strings"
 )
-
-func getUsernameByArenaTeamID(DB *gorm.DB, teamID int) string {
-	var accountID struct {
-		ID int `gorm:"column:account"`
-	}
-	err := DB.Clauses(dbresolver.Use("characters")).Raw(
-		"SELECT `characters`.`account` FROM `characters` WHERE `characters`.`guid` = " +
-			"(SELECT `arena_team`.`captainGuid` FROM `arena_team` " +
-			"WHERE `arena_team`.`arenaTeamId` = " + strconv.Itoa(teamID) + ")").
-		First(&accountID).Error
-	if err != nil {
-		return ""
-	}
-
-	var checkUsername struct {
-		Username string `gorm:"column:username"`
-	}
-	err = DB.Clauses(dbresolver.Use("auth")).Raw("SELECT username FROM account WHERE id=" + strconv.Itoa(accountID.ID)).
-		First(&checkUsername).Error
-	// should never happen
-	if err != nil {
-		return ""
-	}
-	return checkUsername.Username
-}
 
 func CheckArenaTeamUserAccount(DB *gorm.DB, teamID int, username string) bool {
 	usernameByID := getUsernameByArenaTeamID(DB, teamID)
@@ -87,4 +63,22 @@ func CheckTeamReady(DB *gorm.DB, inviter, invited int) (database.TeamReadyGames,
 		return database.TeamReadyGames{}, err
 	}
 	return requestTeam, nil
+}
+
+func CheckSameArenaType(DB *gorm.DB, inviter, invited int) uint8 {
+	var arenaTypeDBStruct struct {
+		ArenaType uint8 `gorm:"column:type"`
+	}
+	DB.Clauses(dbresolver.Use("characters")).
+		Raw("SELECT `type` from arena_team WHERE arenaTeamId = " + strconv.Itoa(inviter)).First(&arenaTypeDBStruct)
+	typeAlliance := arenaTypeDBStruct.ArenaType
+	DB.Clauses(dbresolver.Use("characters")).
+		Raw("SELECT `type` from arena_team WHERE arenaTeamId = " + strconv.Itoa(invited)).First(&arenaTypeDBStruct)
+	typeHorde := arenaTypeDBStruct.ArenaType
+	log.Println(typeAlliance, " ", typeHorde)
+	if typeAlliance != typeHorde {
+		return 0
+	}
+
+	return typeAlliance
 }

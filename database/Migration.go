@@ -120,8 +120,9 @@ type TeamRequests struct {
 
 type TeamReadyGames struct {
 	gorm.Model
-	InviterTeam int `json:"team_id"`
-	InvitedTeam int `json:"opponent_id"`
+	InviterTeam int  `json:"team_id"`
+	InvitedTeam int  `json:"opponent_id"`
+	IsPlayed    bool `json:"is_played"`
 }
 
 type BetNotification struct {
@@ -131,6 +132,13 @@ type BetNotification struct {
 	Body      string `json:"body"`
 	Seen      bool   `json:"seen"`
 	NotifType uint8  `json:"notif_type"`
+}
+
+type InGameTeamData struct {
+	gorm.Model
+	TeamID      uint `json:"team_id"`
+	SeasonGames uint `json:"season_games"`
+	SeasonWins  uint `json:"season_wins"`
 }
 
 func DbSqlMigration(url string) *gorm.DB {
@@ -155,6 +163,7 @@ func DbSqlMigration(url string) *gorm.DB {
 	db.AutoMigrate(&TeamRequests{})
 	db.AutoMigrate(&TeamReadyGames{})
 	db.AutoMigrate(&BetNotification{})
+	db.AutoMigrate(&InGameTeamData{})
 	err = db.Use(dbresolver.Register(dbresolver.Config{
 		Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "messenger_api", "characters", 1))}}, "characters").
 		Register(dbresolver.Config{

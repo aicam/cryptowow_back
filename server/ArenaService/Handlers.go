@@ -60,6 +60,13 @@ func (s *Service) InviteTeam() gin.HandlerFunc {
 			return
 		}
 
+		arenaType := CheckSameArenaType(s.DB, reqParams.Inviter, reqParams.Invited)
+		if arenaType == 0 {
+			c.JSON(http.StatusBadRequest, actionResult(-20, "error in parsing"))
+			LogService.LogPotentialCyberAttack(c, "ArenaService_Invite_Same_Type_Check")
+			return
+		}
+
 		s.InviteOperation(reqParams.Inviter, reqParams.Invited, invitedUsername, reqParams.BetAmount, reqParams.BetCurrency)
 		c.JSON(http.StatusOK, actionResult(1, "joined successfully"))
 		LogService.LogSucceedJoinOperation(username, invitedUsername)
@@ -171,7 +178,13 @@ func (s *Service) AcceptStartGame() gin.HandlerFunc {
 			}
 		}
 
-		err = s.StartGameAcceptHandler(readyTeam.ID, reqParams.TeamID)
+		if readyTeam.IsPlayed {
+			c.JSON(http.StatusBadRequest, actionResult(-21, "error in parsing"))
+			LogService.LogPotentialCyberAttack(c, "ArenaService_Accept_Start_Played_Bucket_Check")
+			return
+		}
+
+		err = s.StartGameAcceptHandler(s.DB, readyTeam.ID, reqParams.TeamID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, actionResult(-1, "Time is over!"))
 			return

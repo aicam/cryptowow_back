@@ -3,6 +3,8 @@ package ArenaService
 import (
 	"fmt"
 	"github.com/aicam/cryptowow_back/database"
+	"gorm.io/gorm"
+	"os"
 	"strconv"
 	"time"
 )
@@ -77,7 +79,7 @@ func (s *Service) StartGameOperation(bucketID uint) error {
 	return nil
 }
 
-func (s *Service) StartGameAcceptHandler(bucketID uint, acceptedID int) error {
+func (s *Service) StartGameAcceptHandler(DB *gorm.DB, bucketID uint, acceptedID int) error {
 	stat, err := s.Redis.Get(s.Context, strconv.Itoa(int(bucketID))).Result()
 	if err != nil {
 		return err
@@ -99,7 +101,29 @@ func (s *Service) StartGameAcceptHandler(bucketID uint, acceptedID int) error {
 	s.Redis.Set(s.Context, strconv.Itoa(int(bucketID)), newStat, time.Duration(READYCHECKCOUNTER)*time.Second)
 	// check result
 	if newStat == "11" {
-		return nil
+		var readyGame database.TeamReadyGames
+		DB.Where("id = " + strconv.Itoa(int(bucketID))).First(&readyGame)
+		inviterArenaTeam := getArenaTeamById(DB, uint(readyGame.InviterTeam))
+		invitedArenaTeam := getArenaTeamById(DB, uint(readyGame.InvitedTeam))
+		AppendNewGame(NewGameParams{
+			ArenaFilePath: os.Getenv("ARENAFILEPATH"),
+			TeamID1:       readyGame.InviterTeam,
+			TeamID2:       readyGame.InvitedTeam,
+			LeaderName1:   getHeroLeaderNameByArenaId(DB, uint(readyGame.InviterTeam)),
+			LeaderName2:   getHeroLeaderNameByArenaId(DB, uint(readyGame.InvitedTeam)),
+			ArenaType:     strconv.Itoa(int(inviterArenaTeam.ArenaType)),
+		})
+		s.DB.Save(&database.InGameTeamData{
+			TeamID:      uint(readyGame.InviterTeam),
+			SeasonGames: uint(inviterArenaTeam.SeasonGames),
+			SeasonWins:  uint(inviterArenaTeam.SeasonWins),
+		}).Save(&database.InGameTeamData{
+			TeamID:      uint(readyGame.InvitedTeam),
+			SeasonGames: uint(invitedArenaTeam.SeasonGames),
+			SeasonWins:  uint(invitedArenaTeam.SeasonWins),
+		})
+		readyGame.IsPlayed = true
+		s.DB.Save(&readyGame)
 	}
 	return nil
 }
