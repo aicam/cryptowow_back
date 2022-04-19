@@ -231,3 +231,24 @@ func (s *Service) GetGameStatus() gin.HandlerFunc {
 
 	}
 }
+
+func (s *Service) GetResult() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		teamId := c.Param("team_id")
+		var inGameInfos []database.InGameTeamData
+		s.DB.Raw("SELECT * FROM `in_game_team_data` WHERE `in_game_team_data`.`bucket_id` IN " +
+			"(SELECT `team_ready_games`.`id` FROM `team_ready_games` WHERE " +
+			"`team_ready_games`.`inviter_team` = " + teamId + " OR " +
+			"`team_ready_games`.`invited_team` = " + teamId + ")").Find(&inGameInfos)
+
+		for _, inGameInfo := range inGameInfos {
+			if inGameInfo.Winner == 0 {
+				s.ProcessGame(inGameInfo.BucketID)
+			}
+		}
+		c.JSON(http.StatusOK, struct {
+			Status       int                       `json:"status"`
+			AllGamesInfo []database.InGameTeamData `json:"all_games_info"`
+		}{Status: 1, AllGamesInfo: inGameInfos})
+	}
+}

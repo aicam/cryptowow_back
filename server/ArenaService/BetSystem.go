@@ -1,7 +1,6 @@
 package ArenaService
 
 import (
-	"errors"
 	"fmt"
 	"github.com/aicam/cryptowow_back/database"
 	"gorm.io/gorm"
@@ -138,22 +137,14 @@ func (s *Service) IsStarted(bucketID uint) int {
 	return 0
 }
 
-func (s *Service) ProcessGame(bucketID uint) GameStatNow {
+func (s *Service) ProcessGame(bucketID uint) {
 	var gameStats database.InGameTeamData
 	err := s.DB.Where(&database.InGameTeamData{BucketID: bucketID}).First(&gameStats).Error
 	if err != nil {
-		return GameStatNow{
-			IsError:        err,
-			IsFinishedPast: false,
-			WinnerId:       0,
-		}
+		return
 	}
 	if gameStats.Winner != 0 {
-		return GameStatNow{
-			IsError:        nil,
-			IsFinishedPast: true,
-			WinnerId:       gameStats.Winner,
-		}
+		return
 	}
 
 	var readyGame database.TeamReadyGames
@@ -161,34 +152,20 @@ func (s *Service) ProcessGame(bucketID uint) GameStatNow {
 
 	inviterArenaTeam := getArenaTeamById(s.DB, uint(readyGame.InviterTeam))
 	invitedArenaTeam := getArenaTeamById(s.DB, uint(readyGame.InvitedTeam))
-
+	winnerId := uint(0)
 	if inviterArenaTeam.SeasonGames == gameStats.InviterSeasonGames {
-		return GameStatNow{
-			IsError:        nil,
-			IsFinishedPast: false,
-			WinnerId:       0,
-		}
+		return
 	} else {
 		if inviterArenaTeam.SeasonWins > gameStats.InviterSeasonWins &&
 			invitedArenaTeam.SeasonWins == gameStats.InvitedSeasonWins {
-			return GameStatNow{
-				IsError:        nil,
-				IsFinishedPast: false,
-				WinnerId:       uint(readyGame.InviterTeam),
-			}
+			winnerId = uint(readyGame.InviterTeam)
 		} else if invitedArenaTeam.SeasonWins > gameStats.InvitedSeasonWins &&
 			inviterArenaTeam.SeasonWins == gameStats.InviterSeasonWins {
-			return GameStatNow{
-				IsError:        nil,
-				IsFinishedPast: false,
-				WinnerId:       uint(readyGame.InvitedTeam),
-			}
+			winnerId = uint(readyGame.InvitedTeam)
 		}
 	}
-
-	return GameStatNow{
-		IsError:        errors.New("Match remained unhandled"),
-		IsFinishedPast: false,
-		WinnerId:       0,
+	if winnerId != 0 {
+		gameStats.Winner = winnerId
+		s.DB.Save(&gameStats)
 	}
 }
