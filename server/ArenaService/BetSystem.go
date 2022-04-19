@@ -1,6 +1,7 @@
 package ArenaService
 
 import (
+	"errors"
 	"fmt"
 	"github.com/aicam/cryptowow_back/database"
 	"gorm.io/gorm"
@@ -114,13 +115,11 @@ func (s *Service) StartGameAcceptHandler(DB *gorm.DB, bucketID uint, acceptedID 
 			ArenaType:     strconv.Itoa(int(inviterArenaTeam.ArenaType)),
 		})
 		s.DB.Save(&database.InGameTeamData{
-			TeamID:      uint(readyGame.InviterTeam),
-			SeasonGames: uint(inviterArenaTeam.SeasonGames),
-			SeasonWins:  uint(inviterArenaTeam.SeasonWins),
-		}).Save(&database.InGameTeamData{
-			TeamID:      uint(readyGame.InvitedTeam),
-			SeasonGames: uint(invitedArenaTeam.SeasonGames),
-			SeasonWins:  uint(invitedArenaTeam.SeasonWins),
+			BucketID:           bucketID,
+			InviterSeasonGames: uint(inviterArenaTeam.SeasonGames),
+			InviterSeasonWins:  uint(inviterArenaTeam.SeasonWins),
+			InvitedSeasonGames: uint(invitedArenaTeam.SeasonGames),
+			InvitedSeasonWins:  uint(invitedArenaTeam.SeasonWins),
 		})
 		readyGame.IsPlayed = true
 		s.DB.Save(&readyGame)
@@ -137,4 +136,59 @@ func (s *Service) IsStarted(bucketID uint) int {
 		return 1
 	}
 	return 0
+}
+
+func (s *Service) ProcessGame(bucketID uint) GameStatNow {
+	var gameStats database.InGameTeamData
+	err := s.DB.Where(&database.InGameTeamData{BucketID: bucketID}).First(&gameStats).Error
+	if err != nil {
+		return GameStatNow{
+			IsError:        err,
+			IsFinishedPast: false,
+			WinnerId:       0,
+		}
+	}
+	if gameStats.Winner != 0 {
+		return GameStatNow{
+			IsError:        nil,
+			IsFinishedPast: true,
+			WinnerId:       gameStats.Winner,
+		}
+	}
+
+	var readyGame database.TeamReadyGames
+	s.DB.Where("id = " + strconv.Itoa(int(bucketID))).First(&readyGame)
+
+	inviterArenaTeam := getArenaTeamById(s.DB, uint(readyGame.InviterTeam))
+	invitedArenaTeam := getArenaTeamById(s.DB, uint(readyGame.InvitedTeam))
+
+	if inviterArenaTeam.SeasonGames == gameStats.InviterSeasonGames {
+		return GameStatNow{
+			IsError:        nil,
+			IsFinishedPast: false,
+			WinnerId:       0,
+		}
+	} else {
+		if inviterArenaTeam.SeasonWins > gameStats.InviterSeasonWins &&
+			invitedArenaTeam.SeasonWins == gameStats.InvitedSeasonWins {
+			return GameStatNow{
+				IsError:        nil,
+				IsFinishedPast: false,
+				WinnerId:       uint(readyGame.InviterTeam),
+			}
+		} else if invitedArenaTeam.SeasonWins > gameStats.InvitedSeasonWins &&
+			inviterArenaTeam.SeasonWins == gameStats.InviterSeasonWins {
+			return GameStatNow{
+				IsError:        nil,
+				IsFinishedPast: false,
+				WinnerId:       uint(readyGame.InvitedTeam),
+			}
+		}
+	}
+
+	return GameStatNow{
+		IsError:        errors.New("Match remained unhandled"),
+		IsFinishedPast: false,
+		WinnerId:       0,
+	}
 }

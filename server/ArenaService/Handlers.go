@@ -147,7 +147,10 @@ func (s *Service) StartGame() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, actionResult(1, "Game started successfully"))
+		c.JSON(http.StatusOK, struct {
+			Status   int  `json:"status"`
+			BucketId uint `json:"bucket_id"`
+		}{Status: 1, BucketId: readyBucket.ID})
 	}
 }
 
@@ -191,5 +194,40 @@ func (s *Service) AcceptStartGame() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, actionResult(1, "Accepted successfully! Be Ready...."))
+	}
+}
+
+func (s *Service) GetGameStatus() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var invReq struct {
+			BucketID uint `json:"bucket_id"`
+		}
+		err := c.BindJSON(&invReq)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, actionResult(-1, "Wrong parameters"))
+		}
+		gameStat := s.IsStarted(invReq.BucketID)
+		if gameStat == -1 {
+			c.JSON(http.StatusOK, GameStatResponse{
+				Status: 1,
+				Code:   -1,
+				Result: "Time is over!",
+			})
+		}
+		if gameStat == 0 {
+			c.JSON(http.StatusOK, GameStatResponse{
+				Status: 1,
+				Code:   0,
+				Result: "Waiting for opponent",
+			})
+		}
+		if gameStat == 1 {
+			c.JSON(http.StatusOK, GameStatResponse{
+				Status: 1,
+				Code:   1,
+				Result: "Joined Successfully!",
+			})
+		}
+
 	}
 }

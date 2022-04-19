@@ -136,9 +136,12 @@ type BetNotification struct {
 
 type InGameTeamData struct {
 	gorm.Model
-	TeamID      uint `json:"team_id"`
-	SeasonGames uint `json:"season_games"`
-	SeasonWins  uint `json:"season_wins"`
+	BucketID           uint `json:"bucket_id"`
+	InviterSeasonGames uint `json:"inviter_season_games"`
+	InviterSeasonWins  uint `json:"inviter_season_wins"`
+	InvitedSeasonGames uint `json:"invited_season_games"`
+	InvitedSeasonWins  uint `json:"invited_season_wins"`
+	Winner             uint `json:"winner"`
 }
 
 func DbSqlMigration(url string) *gorm.DB {
