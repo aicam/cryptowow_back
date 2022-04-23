@@ -79,7 +79,7 @@ func (s *Service) InviteTeam() gin.HandlerFunc {
 		/* check request time */
 		end := time.Now()
 		/* check request time */
-		s.PP.Histograms["bet_system_invitation_request_response_duration"].Observe(float64(end.Sub(start).Milliseconds()))
+		s.PP.Histograms["bet_system_invitation_request_response_duration"].Observe(float64(end.Sub(start).Nanoseconds()))
 	}
 }
 
@@ -138,10 +138,12 @@ func (s *Service) StartGame() gin.HandlerFunc {
 		if !CheckIsAlreadyStarted(s.DB, s.Rdb, s.Context, reqParams.Inviter) ||
 			!CheckIsAlreadyStarted(s.DB, s.Rdb, s.Context, reqParams.Invited) {
 			c.JSON(http.StatusOK, actionResult(0, "Team is already in another game queue"))
+			return
 		}
 
 		if !CheckAlreadyInArena(s.DB, uint(reqParams.Inviter)) || !CheckAlreadyInArena(s.DB, uint(reqParams.Invited)) {
 			c.JSON(http.StatusOK, actionResult(0, "Team is already in another match"))
+			return
 		}
 
 		betInfo, err := CheckTeamReady(s.DB, reqParams.Inviter, reqParams.Invited)

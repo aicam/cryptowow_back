@@ -126,7 +126,7 @@ func (s *Service) ProcessGame(betInfo database.BetInfo) database.BetInfo {
 			winnerId = betInfo.InviterTeam
 		} else if invitedArenaTeam.SeasonWins > betInfo.InvitedSeasonWins &&
 			inviterArenaTeam.SeasonWins == betInfo.InviterSeasonWins {
-			winnerId = uint(betInfo.InvitedTeam)
+			winnerId = betInfo.InvitedTeam
 		}
 	}
 	if winnerId != 0 {

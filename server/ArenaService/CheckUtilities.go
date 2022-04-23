@@ -80,7 +80,7 @@ func CheckIsAlreadyStarted(DB *gorm.DB, rdb *redis.Client, ctx context.Context, 
 
 func CheckAlreadyInArena(DB *gorm.DB, teamID uint) bool {
 	var bucket database.BetInfo
-	if err := DB.Where("inviter_team = ? OR invited_team = ? AND step = "+strconv.Itoa(int(GameStarted)),
+	if err := DB.Where("(inviter_team = ? OR invited_team = ?) AND step = "+strconv.Itoa(int(GameStarted)),
 		teamID, teamID).First(&bucket).Error; err != gorm.ErrRecordNotFound {
 		return false
 	}
