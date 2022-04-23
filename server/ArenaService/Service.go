@@ -9,7 +9,7 @@ import (
 
 type Service struct {
 	DB      *gorm.DB
-	Redis   *redis.Client
+	Rdb     *redis.Client
 	Context context.Context
 	PP      Prometheus.PrometheusParams
 }

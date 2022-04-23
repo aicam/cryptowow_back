@@ -1,11 +1,10 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"github.com/go-redis/redis/v8"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/sirupsen/logrus"
 	"log"
-	"os"
 )
 
 type PrometheusParams struct {
@@ -20,28 +19,28 @@ func fuckError(e error) {
 }
 
 func main() {
-	//rdb := redis.NewClient(&redis.Options{
-	//	Addr:     "localhost:6379",
-	//	Password: "", // no password set
-	//	DB:       0,  // use default DB
-	//})
+	cnt := context.Background()
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+
+	//for i := 0; i < 50; i++ {
+	//	rdb.Set(cnt, strconv.Itoa(i + 20), "a", 100 * time.Second)
+	//}
+
+	res := rdb.Get(cnt, "v").Val()
+	log.Println(res)
 	//DB := database.DbSqlMigration("aicam:021021ali@tcp(127.0.0.1:3306)/cryptowow?charset=utf8mb4&parseTime=True")
 	//s := ArenaService.Service{
 	//	DB:      DB,
-	//	Redis:   rdb,
+	//	Rdb:   rdb,
 	//	Context: context.Background(),
 	//	PP:      Prometheus.PrometheusParams{},
 	//}
 	//
 
-	myfile, e := os.Create("log.txt")
-	if e != nil {
-		log.Fatal(e)
-	}
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-	logrus.SetOutput(myfile)
-	logrus.WithFields(logrus.Fields{"test": 2, "test_s": "dsada"}).Error("detail test")
-	fmt.Println("asdas")
 	//pp := PrometheusParams{}
 	//pp.Counters = make(map[string]prometheus.Counter)
 	//pp.Gauges = make(map[string]prometheus.Gauge)

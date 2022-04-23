@@ -3,7 +3,6 @@ package ArenaService
 import (
 	"fmt"
 	"github.com/aicam/cryptowow_back/database"
-	"gorm.io/gorm"
 	"os"
 	"strconv"
 	"time"
@@ -29,9 +28,9 @@ func (s *Service) InviteOperation(inviter, invited int, invitedName string, betA
 	s.DB.Save(&notif)
 	s.DB.Save(&newQueued)
 
-	// TODO: uncomment.prometheus
-	//s.PP.Counters["bet_system_invite_operation_counter"].Inc()
-	//s.PP.Gauges["bet_system_invite_operation_in_progress"].Inc()
+	// prometheus
+	s.PP.Counters["bet_system_invite_operation_counter"].Inc()
+	s.PP.Gauges["bet_system_invite_operation_in_progress"].Inc()
 }
 
 func (s *Service) AcceptInvitationOperation(inviter, invited int, inviterName string) error {
@@ -62,25 +61,27 @@ func (s *Service) AcceptInvitationOperation(inviter, invited int, inviterName st
 		NotifType: 0,
 	}
 	s.DB.Save(&notif)
-	// TODO: uncomment.prometheus
-	//s.PP.Counters["bet_system_accept_operation_counter"].Inc()
-	//s.PP.Gauges["bet_system_accept_operation_in_progress"].Inc()
-	//s.PP.Gauges["bet_system_invite_operation_in_progress"].Add(-1)
+
+	// prometheus
+	s.PP.Counters["bet_system_accept_operation_counter"].Inc()
+	s.PP.Gauges["bet_system_accept_operation_in_progress"].Inc()
+	s.PP.Gauges["bet_system_invite_operation_in_progress"].Add(-1)
 	return nil
 }
 
 func (s *Service) StartGameOperation(bucketID uint) error {
-	err := s.Redis.Set(s.Context, strconv.Itoa(int(bucketID)), "00", time.Duration(READYCHECKCOUNTER)*time.Second).Err()
+	err := s.Rdb.Set(s.Context, strconv.Itoa(int(bucketID)), "00", time.Duration(READYCHECKCOUNTER)*time.Second).Err()
 	if err != nil {
 		return err
 	}
-	// TODO: uncomment.prometheus
-	//s.PP.Gauges["bet_system_accept_operation_in_progress"].Add(-1)
+	// prometheus
+	s.PP.Counters["bet_system_start_game_operation_counter"].Inc()
+	s.PP.Gauges["bet_system_accept_operation_in_progress"].Add(-1)
 	return nil
 }
 
-func (s *Service) StartGameAcceptHandler(DB *gorm.DB, bucketID uint, acceptedID int) error {
-	stat, err := s.Redis.Get(s.Context, strconv.Itoa(int(bucketID))).Result()
+func (s *Service) StartGameAcceptHandler(bucketID uint, acceptedID int) error {
+	stat, err := s.Rdb.Get(s.Context, strconv.Itoa(int(bucketID))).Result()
 	if err != nil {
 		return err
 	}
@@ -98,19 +99,19 @@ func (s *Service) StartGameAcceptHandler(DB *gorm.DB, bucketID uint, acceptedID 
 		newStat = "1" + stat[1:]
 	}
 
-	s.Redis.Set(s.Context, strconv.Itoa(int(bucketID)), newStat, time.Duration(READYCHECKCOUNTER)*time.Second)
+	s.Rdb.Set(s.Context, strconv.Itoa(int(bucketID)), newStat, time.Duration(READYCHECKCOUNTER)*time.Second)
 	// check result
 	if newStat == "11" {
 		var readyGame database.TeamReadyGames
-		DB.Where("id = " + strconv.Itoa(int(bucketID))).First(&readyGame)
-		inviterArenaTeam := getArenaTeamById(DB, uint(readyGame.InviterTeam))
-		invitedArenaTeam := getArenaTeamById(DB, uint(readyGame.InvitedTeam))
+		s.DB.Where("id = " + strconv.Itoa(int(bucketID))).First(&readyGame)
+		inviterArenaTeam := getArenaTeamById(s.DB, uint(readyGame.InviterTeam))
+		invitedArenaTeam := getArenaTeamById(s.DB, uint(readyGame.InvitedTeam))
 		AppendNewGame(NewGameParams{
 			ArenaFilePath: os.Getenv("ARENAFILEPATH"),
 			TeamID1:       readyGame.InviterTeam,
 			TeamID2:       readyGame.InvitedTeam,
-			LeaderName1:   getHeroLeaderNameByArenaId(DB, uint(readyGame.InviterTeam)),
-			LeaderName2:   getHeroLeaderNameByArenaId(DB, uint(readyGame.InvitedTeam)),
+			LeaderName1:   getHeroLeaderNameByArenaId(s.DB, uint(readyGame.InviterTeam)),
+			LeaderName2:   getHeroLeaderNameByArenaId(s.DB, uint(readyGame.InvitedTeam)),
 			ArenaType:     strconv.Itoa(int(inviterArenaTeam.ArenaType)),
 		})
 		s.DB.Save(&database.InGameTeamData{
@@ -122,12 +123,16 @@ func (s *Service) StartGameAcceptHandler(DB *gorm.DB, bucketID uint, acceptedID 
 		})
 		readyGame.IsPlayed = true
 		s.DB.Save(&readyGame)
+
+		// prometheus
+		s.PP.Counters["bet_system_match_counter"].Inc()
+		s.PP.Gauges["bet_system_match_in_progress"].Inc()
 	}
 	return nil
 }
 
 func (s *Service) IsStarted(bucketID uint) int {
-	stat, err := s.Redis.Get(s.Context, strconv.Itoa(int(bucketID))).Result()
+	stat, err := s.Rdb.Get(s.Context, strconv.Itoa(int(bucketID))).Result()
 	if err != nil {
 		return -1
 	}
@@ -167,5 +172,9 @@ func (s *Service) ProcessGame(bucketID uint) {
 	if winnerId != 0 {
 		gameStats.Winner = winnerId
 		s.DB.Save(&gameStats)
+
+		// prometheus
+		s.PP.Counters["bet_system_match_finished"].Inc()
+		s.PP.Gauges["bet_system_match_in_progress"].Add(-1)
 	}
 }

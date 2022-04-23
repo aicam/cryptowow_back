@@ -118,7 +118,7 @@ func NewServer() *Server {
 			Companions CompanionsInfo
 		}{Mounts: mounts, Companions: companions},
 		TrinityCoreBridgeVars: make(map[string]string),
-		TrinityCoreBridgeServer: ArenaService.Service{DB: DBStruct, Redis: rdb, Context: context.Background(),
-			PP: Prometheus.GetIndexServerPrometheusParams()},
+		TrinityCoreBridgeServer: ArenaService.Service{DB: DBStruct, Rdb: rdb, Context: context.Background(),
+			PP: Prometheus.GetServerPrometheusParams()},
 	}
 }

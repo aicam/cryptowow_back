@@ -133,6 +133,15 @@ func (s *Service) StartGame() gin.HandlerFunc {
 			return
 		}
 
+		if !CheckIsAlreadyStarted(s.DB, s.Rdb, s.Context, uint(reqParams.Inviter)) ||
+			!CheckIsAlreadyStarted(s.DB, s.Rdb, s.Context, uint(reqParams.Invited)) {
+			c.JSON(http.StatusOK, actionResult(0, "Team is already in another game queue"))
+		}
+
+		if !CheckAlreadyInArena(s.DB, uint(reqParams.Inviter)) || !CheckAlreadyInArena(s.DB, uint(reqParams.Invited)) {
+			c.JSON(http.StatusOK, actionResult(0, "Team is already in another match"))
+		}
+
 		readyBucket, err := CheckTeamReady(s.DB, reqParams.Inviter, reqParams.Invited)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, actionResult(-6, "error in parsing"))
@@ -143,7 +152,7 @@ func (s *Service) StartGame() gin.HandlerFunc {
 		err = s.StartGameOperation(readyBucket.ID)
 		if err != nil {
 			c.JSON(http.StatusBadGateway, actionResult(-1, "Service unavailable"))
-			LogService.LogCrash("Redis", "ArenaService_Accept_Invitation")
+			LogService.LogCrash("Rdb", "ArenaService_Accept_Invitation")
 			return
 		}
 
@@ -187,7 +196,7 @@ func (s *Service) AcceptStartGame() gin.HandlerFunc {
 			return
 		}
 
-		err = s.StartGameAcceptHandler(s.DB, readyTeam.ID, reqParams.TeamID)
+		err = s.StartGameAcceptHandler(readyTeam.ID, reqParams.TeamID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, actionResult(-1, "Time is over!"))
 			return

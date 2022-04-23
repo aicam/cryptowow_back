@@ -1,8 +1,10 @@
 package ArenaService
 
 import (
+	"context"
 	"github.com/aicam/cryptowow_back/database"
 	"github.com/aicam/cryptowow_back/server/WalletService"
+	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
 	"log"
@@ -81,4 +83,30 @@ func CheckSameArenaType(DB *gorm.DB, inviter, invited int) uint8 {
 	}
 
 	return typeAlliance
+}
+
+func CheckIsAlreadyStarted(DB *gorm.DB, rdb *redis.Client, ctx context.Context, teamID uint) bool {
+	var buckets []database.TeamReadyGames
+	DB.Where("inviter_team = ? OR invited_team = ?", teamID, teamID).Find(&buckets)
+	for _, bucket := range buckets {
+		err := rdb.Get(ctx, strconv.Itoa(int(bucket.ID))).Err()
+		if err != redis.Nil {
+			return false
+		}
+	}
+	return true
+}
+
+func CheckAlreadyInArena(DB *gorm.DB, teamID uint) bool {
+	var buckets []database.TeamReadyGames
+	DB.Where("inviter_team = ? OR invited_team = ?", teamID, teamID).Find(&buckets)
+	var gameData database.InGameTeamData
+	for _, bucket := range buckets {
+		if err := DB.Where(&database.InGameTeamData{BucketID: bucket.ID}).First(&gameData).Error; err == nil {
+			if gameData.Winner == 0 {
+				return false
+			}
+		}
+	}
+	return true
 }
