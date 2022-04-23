@@ -9,7 +9,6 @@ import (
 
 func (s *Service) InviteOperation(inviter, invited uint, invitedName string, betAmount float64, currency string) {
 	inviterArenaTeam := getArenaTeamById(s.DB, inviter)
-	invitedArenaTeam := getArenaTeamById(s.DB, invited)
 	s.DB.Save(&database.BetInfo{
 		InviterTeam:        inviter,
 		InvitedTeam:        invited,
@@ -17,11 +16,11 @@ func (s *Service) InviteOperation(inviter, invited uint, invitedName string, bet
 		Currency:           currency,
 		InviterUsername:    getUsernameByArenaTeamID(s.DB, inviter),
 		InvitedUsername:    getUsernameByArenaTeamID(s.DB, invited),
-		Step:               0,
-		InviterSeasonGames: inviterArenaTeam.SeasonGames,
-		InviterSeasonWins:  inviterArenaTeam.SeasonWins,
-		InvitedSeasonGames: invitedArenaTeam.SeasonGames,
-		InvitedSeasonWins:  invitedArenaTeam.SeasonWins,
+		Step:               InvitationSent,
+		InviterSeasonGames: 0,
+		InviterSeasonWins:  0,
+		InvitedSeasonGames: 0,
+		InvitedSeasonWins:  0,
 		ArenaType:          inviterArenaTeam.ArenaType,
 		Winner:             0,
 	})
@@ -89,6 +88,12 @@ func (s *Service) StartGameAcceptHandler(bucketID uint, acceptedID uint) error {
 			ArenaType:     strconv.Itoa(int(betInfo.ArenaType)),
 		})
 		betInfo.Step = GameStarted
+		inviterArenaTeam := getArenaTeamById(s.DB, betInfo.InviterTeam)
+		invitedArenaTeam := getArenaTeamById(s.DB, betInfo.InvitedTeam)
+		betInfo.InviterSeasonWins = inviterArenaTeam.SeasonWins
+		betInfo.InviterSeasonGames = inviterArenaTeam.SeasonGames
+		betInfo.InvitedSeasonWins = invitedArenaTeam.SeasonWins
+		betInfo.InvitedSeasonGames = invitedArenaTeam.SeasonWins
 		s.DB.Save(&betInfo)
 
 		// prometheus
