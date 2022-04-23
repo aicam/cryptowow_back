@@ -106,42 +106,21 @@ type CashOutRequest struct {
 }
 
 // Arena Bet system
-type QueuedTeams struct {
+type BetInfo struct {
 	gorm.Model
-	TeamId        int `json:"team_id"`
-	InQueueTeamId int `json:"in_queue_team"`
-}
-
-type TeamRequests struct {
-	gorm.Model
-	TeamId          int `json:"team_id"`
-	RequestedTeamId int `json:"requested_team_id"`
-}
-
-type TeamReadyGames struct {
-	gorm.Model
-	InviterTeam int  `json:"team_id"`
-	InvitedTeam int  `json:"opponent_id"`
-	IsPlayed    bool `json:"is_played"`
-}
-
-type BetNotification struct {
-	gorm.Model
-	TeamId    int    `json:"team_id"`
-	Title     string `json:"title"`
-	Body      string `json:"body"`
-	Seen      bool   `json:"seen"`
-	NotifType uint8  `json:"notif_type"`
-}
-
-type InGameTeamData struct {
-	gorm.Model
-	BucketID           uint `json:"bucket_id"`
-	InviterSeasonGames uint `json:"inviter_season_games"`
-	InviterSeasonWins  uint `json:"inviter_season_wins"`
-	InvitedSeasonGames uint `json:"invited_season_games"`
-	InvitedSeasonWins  uint `json:"invited_season_wins"`
-	Winner             uint `json:"winner"`
+	InviterTeam        uint    `json:"inviter_team"`
+	InvitedTeam        uint    `json:"invited_team"`
+	Amount             float64 `json:"amount"`
+	Currency           string  `json:"currency"`
+	InviterUsername    string  `json:"inviter_username"`
+	InvitedUsername    string  `json:"invited_username"`
+	Step               uint8   `json:"step"`
+	InviterSeasonGames uint    `json:"inviter_season_games"`
+	InviterSeasonWins  uint    `json:"inviter_season_wins"`
+	InvitedSeasonGames uint    `json:"invited_season_games"`
+	InvitedSeasonWins  uint    `json:"invited_season_wins"`
+	ArenaType          uint8   `json:"arena_type"`
+	Winner             uint    `json:"winner"`
 }
 
 func DbSqlMigration(url string) *gorm.DB {
@@ -162,11 +141,8 @@ func DbSqlMigration(url string) *gorm.DB {
 	db.AutoMigrate(&IPRecords{})
 	db.AutoMigrate(&TransactionLog{})
 	db.AutoMigrate(&CashOutRequest{})
-	db.AutoMigrate(&QueuedTeams{})
-	db.AutoMigrate(&TeamRequests{})
-	db.AutoMigrate(&TeamReadyGames{})
-	db.AutoMigrate(&BetNotification{})
-	db.AutoMigrate(&InGameTeamData{})
+	// Bet
+	db.AutoMigrate(&BetInfo{})
 	err = db.Use(dbresolver.Register(dbresolver.Config{
 		Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "messenger_api", "characters", 1))}}, "characters").
 		Register(dbresolver.Config{

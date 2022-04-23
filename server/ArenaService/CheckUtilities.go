@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-func CheckArenaTeamUserAccount(DB *gorm.DB, teamID int, username string) bool {
+func CheckArenaTeamUserAccount(DB *gorm.DB, teamID uint, username string) bool {
 	usernameByID := getUsernameByArenaTeamID(DB, teamID)
 	if strings.ToUpper(username) != strings.ToUpper(usernameByID) {
 		return false
@@ -28,12 +28,9 @@ func CheckBalance(DB *gorm.DB, username string, value float64, currency string) 
 	return true
 }
 
-func CheckQueueTeam(DB *gorm.DB, inviter, invited int) error {
-	var queueTeam database.QueuedTeams
-	err := DB.Where(database.QueuedTeams{
-		TeamId:        invited,
-		InQueueTeamId: inviter,
-	}).First(&queueTeam).Error
+func CheckQueueTeam(DB *gorm.DB, inviter, invited uint) error {
+	var queueTeam database.BetInfo
+	err := DB.Where("(inviter_team = ? AND invited_team = ?) AND (step = 0 OR step = 1)").First(&queueTeam).Error
 
 	if err != nil {
 		return err
@@ -41,41 +38,29 @@ func CheckQueueTeam(DB *gorm.DB, inviter, invited int) error {
 	return nil
 }
 
-func CheckTeamRequest(DB *gorm.DB, inviter, invited int) error {
-	var requestTeam database.TeamRequests
-	err := DB.Where(database.TeamRequests{
-		TeamId:          inviter,
-		RequestedTeamId: invited,
-	}).First(&requestTeam).Error
-
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func CheckTeamReady(DB *gorm.DB, inviter, invited int) (database.TeamReadyGames, error) {
-	var requestTeam database.TeamReadyGames
-	err := DB.Where(database.TeamReadyGames{
+func CheckTeamReady(DB *gorm.DB, inviter, invited uint) (database.BetInfo, error) {
+	var betInfo database.BetInfo
+	err := DB.Where(&database.BetInfo{
 		InviterTeam: inviter,
 		InvitedTeam: invited,
-	}).First(&requestTeam).Error
+		Step:        InvitationAccepted,
+	}).First(&betInfo).Error
 
 	if err != nil {
-		return database.TeamReadyGames{}, err
+		return database.BetInfo{}, err
 	}
-	return requestTeam, nil
+	return betInfo, nil
 }
 
-func CheckSameArenaType(DB *gorm.DB, inviter, invited int) uint8 {
+func CheckSameArenaType(DB *gorm.DB, inviter, invited uint) uint8 {
 	var arenaTypeDBStruct struct {
 		ArenaType uint8 `gorm:"column:type"`
 	}
 	DB.Clauses(dbresolver.Use("characters")).
-		Raw("SELECT `type` from arena_team WHERE arenaTeamId = " + strconv.Itoa(inviter)).First(&arenaTypeDBStruct)
+		Raw("SELECT `type` from arena_team WHERE arenaTeamId = " + strconv.Itoa(int(inviter))).First(&arenaTypeDBStruct)
 	typeAlliance := arenaTypeDBStruct.ArenaType
 	DB.Clauses(dbresolver.Use("characters")).
-		Raw("SELECT `type` from arena_team WHERE arenaTeamId = " + strconv.Itoa(invited)).First(&arenaTypeDBStruct)
+		Raw("SELECT `type` from arena_team WHERE arenaTeamId = " + strconv.Itoa(int(invited))).First(&arenaTypeDBStruct)
 	typeHorde := arenaTypeDBStruct.ArenaType
 	log.Println(typeAlliance, " ", typeHorde)
 	if typeAlliance != typeHorde {
@@ -86,7 +71,7 @@ func CheckSameArenaType(DB *gorm.DB, inviter, invited int) uint8 {
 }
 
 func CheckIsAlreadyStarted(DB *gorm.DB, rdb *redis.Client, ctx context.Context, teamID uint) bool {
-	var buckets []database.TeamReadyGames
+	var buckets []database.BetInfo
 	DB.Where("inviter_team = ? OR invited_team = ?", teamID, teamID).Find(&buckets)
 	for _, bucket := range buckets {
 		err := rdb.Get(ctx, strconv.Itoa(int(bucket.ID))).Err()
@@ -98,15 +83,10 @@ func CheckIsAlreadyStarted(DB *gorm.DB, rdb *redis.Client, ctx context.Context, 
 }
 
 func CheckAlreadyInArena(DB *gorm.DB, teamID uint) bool {
-	var buckets []database.TeamReadyGames
-	DB.Where("inviter_team = ? OR invited_team = ?", teamID, teamID).Find(&buckets)
-	var gameData database.InGameTeamData
-	for _, bucket := range buckets {
-		if err := DB.Where(&database.InGameTeamData{BucketID: bucket.ID}).First(&gameData).Error; err == nil {
-			if gameData.Winner == 0 {
-				return false
-			}
-		}
+	var bucket database.BetInfo
+	if err := DB.Where("inviter_team = ? OR invited_team = ? AND step = "+strconv.Itoa(int(GameStarted)),
+		teamID, teamID).First(&bucket).Error; err != gorm.ErrRecordNotFound {
+		return false
 	}
 	return true
 }

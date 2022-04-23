@@ -9,8 +9,8 @@ import (
 
 type NewGameParams struct {
 	ArenaFilePath string
-	TeamID1       int
-	TeamID2       int
+	TeamID1       uint
+	TeamID2       uint
 	LeaderName1   string
 	LeaderName2   string
 	ArenaType     string
@@ -25,9 +25,9 @@ func AppendNewGame(params NewGameParams) {
 	if params.MapType == "" {
 		params.MapType = MapTypes[rand.Intn(len(MapTypes))]
 	}
-	newArenaStr := strconv.Itoa(params.TeamID1) + "," +
+	newArenaStr := strconv.Itoa(int(params.TeamID1)) + "," +
 		params.LeaderName1 + "," +
-		strconv.Itoa(params.TeamID2) + "," +
+		strconv.Itoa(int(params.TeamID2)) + "," +
 		params.LeaderName2 + "," +
 		params.ArenaType + "," +
 		params.MapType + "\n"

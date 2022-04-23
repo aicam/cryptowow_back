@@ -4,26 +4,26 @@ type ArenaTeam struct {
 	ArenaTeamID int    `json:"arena_team_id" gorm:"column:arenaTeamId"`
 	LeaderName  string `json:"leader_name" gorm:"column:name"`
 	LeaderGUID  int    `json:"leader_guid" gorm:"column:captainGuid"`
-	ArenaType   int8   `json:"arena_type" gorm:"column:type"`
+	ArenaType   uint8  `json:"arena_type" gorm:"column:type"`
 	SeasonGames uint   `json:"season_games" gorm:"column:seasonGames"`
 	SeasonWins  uint   `json:"season_wins" gorm:"column:seasonWins"`
 }
 
 type InviteRequest struct {
-	Inviter     int     `json:"inviter"`
-	Invited     int     `json:"invited"`
+	Inviter     uint    `json:"inviter"`
+	Invited     uint    `json:"invited"`
 	BetAmount   float64 `json:"bet_amount"`
 	BetCurrency string  `json:"bet_currency"`
 }
 
 type GeneralInvitationRequest struct {
-	Inviter int `json:"inviter"`
-	Invited int `json:"invited"`
+	Inviter uint `json:"inviter"`
+	Invited uint `json:"invited"`
 }
 
 type AcceptStartGameRequest struct {
-	TeamID     int `json:"team_id"`
-	OpponentID int `json:"opponent_id"`
+	TeamID     uint `json:"team_id"`
+	OpponentID uint `json:"opponent_id"`
 }
 
 type GameStatResponse struct {
@@ -37,3 +37,8 @@ type GameStatNow struct {
 	IsFinishedPast bool
 	WinnerId       uint
 }
+
+var InvitationSent = uint8(0)
+var InvitationAccepted = uint8(1)
+var GameStarted = uint8(2)
+var GameFinished = uint8(3)

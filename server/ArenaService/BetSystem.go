@@ -1,72 +1,50 @@
 package ArenaService
 
 import (
-	"fmt"
 	"github.com/aicam/cryptowow_back/database"
 	"os"
 	"strconv"
 	"time"
 )
 
-func (s *Service) InviteOperation(inviter, invited int, invitedName string, betAmount float64, currency string) {
-	newQueued := database.QueuedTeams{
-		TeamId:        invited,
-		InQueueTeamId: inviter,
-	}
-	notif := database.BetNotification{
-		TeamId:    invited,
-		Title:     "New match request",
-		Body:      fmt.Sprintf("Team %s invited you to a %f bet!", invitedName, betAmount),
-		Seen:      false,
-		NotifType: 0,
-	}
-	newRequest := database.TeamRequests{
-		TeamId:          inviter,
-		RequestedTeamId: invited,
-	}
-	s.DB.Save(&newRequest)
-	s.DB.Save(&notif)
-	s.DB.Save(&newQueued)
-
+func (s *Service) InviteOperation(inviter, invited uint, invitedName string, betAmount float64, currency string) {
+	inviterArenaTeam := getArenaTeamById(s.DB, inviter)
+	invitedArenaTeam := getArenaTeamById(s.DB, invited)
+	s.DB.Save(&database.BetInfo{
+		InviterTeam:        inviter,
+		InvitedTeam:        invited,
+		Amount:             betAmount,
+		Currency:           currency,
+		InviterUsername:    getUsernameByArenaTeamID(s.DB, inviter),
+		InvitedUsername:    getUsernameByArenaTeamID(s.DB, invited),
+		Step:               0,
+		InviterSeasonGames: inviterArenaTeam.SeasonGames,
+		InviterSeasonWins:  inviterArenaTeam.SeasonWins,
+		InvitedSeasonGames: invitedArenaTeam.SeasonGames,
+		InvitedSeasonWins:  invitedArenaTeam.SeasonWins,
+		ArenaType:          inviterArenaTeam.ArenaType,
+		Winner:             0,
+	})
 	// prometheus
 	s.PP.Counters["bet_system_invite_operation_counter"].Inc()
 	s.PP.Gauges["bet_system_invite_operation_in_progress"].Inc()
 }
 
-func (s *Service) AcceptInvitationOperation(inviter, invited int, inviterName string) error {
-	var queued database.QueuedTeams
-	if err := s.DB.Where(&database.QueuedTeams{TeamId: invited,
-		InQueueTeamId: inviter}).First(&queued).Error; err != nil {
-		return err
-	}
-	s.DB.Delete(&queued)
-
-	var request database.TeamRequests
-	if err := s.DB.Where(&database.TeamRequests{TeamId: inviter,
-		RequestedTeamId: invited}).First(&request).Error; err != nil {
-		return err
-	}
-	s.DB.Delete(&request)
-
-	s.DB.Save(&database.TeamReadyGames{
+func (s *Service) AcceptInvitationOperation(inviter, invited uint) error {
+	var betInfo database.BetInfo
+	err := s.DB.Where(&database.BetInfo{
 		InviterTeam: inviter,
 		InvitedTeam: invited,
-	})
-
-	notif := database.BetNotification{
-		TeamId:    inviter,
-		Title:     "Your request accepted",
-		Body:      fmt.Sprintf("Team %s accepted your battle request", inviterName),
-		Seen:      false,
-		NotifType: 0,
-	}
-	s.DB.Save(&notif)
+		Step:        0,
+	}).First(&betInfo).Error
+	betInfo.Step = 1
+	s.DB.Save(&betInfo)
 
 	// prometheus
 	s.PP.Counters["bet_system_accept_operation_counter"].Inc()
 	s.PP.Gauges["bet_system_accept_operation_in_progress"].Inc()
 	s.PP.Gauges["bet_system_invite_operation_in_progress"].Add(-1)
-	return nil
+	return err
 }
 
 func (s *Service) StartGameOperation(bucketID uint) error {
@@ -80,18 +58,18 @@ func (s *Service) StartGameOperation(bucketID uint) error {
 	return nil
 }
 
-func (s *Service) StartGameAcceptHandler(bucketID uint, acceptedID int) error {
+func (s *Service) StartGameAcceptHandler(bucketID uint, acceptedID uint) error {
 	stat, err := s.Rdb.Get(s.Context, strconv.Itoa(int(bucketID))).Result()
 	if err != nil {
 		return err
 	}
-	var bucketTeam database.TeamReadyGames
-	err = s.DB.Where("id = " + strconv.Itoa(int(bucketID))).First(&bucketTeam).Error
+	var betInfo database.BetInfo
+	err = s.DB.Where("id = " + strconv.Itoa(int(bucketID))).First(&betInfo).Error
 	if err != nil {
 		return err
 	}
 	var acceptedTeam uint8
-	if acceptedTeam = 1; acceptedID == bucketTeam.InviterTeam {
+	if acceptedTeam = 1; acceptedID == betInfo.InviterTeam {
 		acceptedTeam = 0
 	}
 	var newStat string
@@ -102,27 +80,16 @@ func (s *Service) StartGameAcceptHandler(bucketID uint, acceptedID int) error {
 	s.Rdb.Set(s.Context, strconv.Itoa(int(bucketID)), newStat, time.Duration(READYCHECKCOUNTER)*time.Second)
 	// check result
 	if newStat == "11" {
-		var readyGame database.TeamReadyGames
-		s.DB.Where("id = " + strconv.Itoa(int(bucketID))).First(&readyGame)
-		inviterArenaTeam := getArenaTeamById(s.DB, uint(readyGame.InviterTeam))
-		invitedArenaTeam := getArenaTeamById(s.DB, uint(readyGame.InvitedTeam))
 		AppendNewGame(NewGameParams{
 			ArenaFilePath: os.Getenv("ARENAFILEPATH"),
-			TeamID1:       readyGame.InviterTeam,
-			TeamID2:       readyGame.InvitedTeam,
-			LeaderName1:   getHeroLeaderNameByArenaId(s.DB, uint(readyGame.InviterTeam)),
-			LeaderName2:   getHeroLeaderNameByArenaId(s.DB, uint(readyGame.InvitedTeam)),
-			ArenaType:     strconv.Itoa(int(inviterArenaTeam.ArenaType)),
+			TeamID1:       betInfo.InviterTeam,
+			TeamID2:       betInfo.InvitedTeam,
+			LeaderName1:   getHeroLeaderNameByArenaId(s.DB, betInfo.InviterTeam),
+			LeaderName2:   getHeroLeaderNameByArenaId(s.DB, betInfo.InvitedTeam),
+			ArenaType:     strconv.Itoa(int(betInfo.ArenaType)),
 		})
-		s.DB.Save(&database.InGameTeamData{
-			BucketID:           bucketID,
-			InviterSeasonGames: uint(inviterArenaTeam.SeasonGames),
-			InviterSeasonWins:  uint(inviterArenaTeam.SeasonWins),
-			InvitedSeasonGames: uint(invitedArenaTeam.SeasonGames),
-			InvitedSeasonWins:  uint(invitedArenaTeam.SeasonWins),
-		})
-		readyGame.IsPlayed = true
-		s.DB.Save(&readyGame)
+		betInfo.Step = GameStarted
+		s.DB.Save(&betInfo)
 
 		// prometheus
 		s.PP.Counters["bet_system_match_counter"].Inc()
@@ -142,39 +109,28 @@ func (s *Service) IsStarted(bucketID uint) int {
 	return 0
 }
 
-func (s *Service) ProcessGame(bucketID uint) {
-	var gameStats database.InGameTeamData
-	err := s.DB.Where(&database.InGameTeamData{BucketID: bucketID}).First(&gameStats).Error
-	if err != nil {
-		return
-	}
-	if gameStats.Winner != 0 {
-		return
-	}
-
-	var readyGame database.TeamReadyGames
-	s.DB.Where("id = " + strconv.Itoa(int(bucketID))).First(&readyGame)
-
-	inviterArenaTeam := getArenaTeamById(s.DB, uint(readyGame.InviterTeam))
-	invitedArenaTeam := getArenaTeamById(s.DB, uint(readyGame.InvitedTeam))
+func (s *Service) ProcessGame(betInfo database.BetInfo) database.BetInfo {
+	inviterArenaTeam := getArenaTeamById(s.DB, betInfo.InviterTeam)
+	invitedArenaTeam := getArenaTeamById(s.DB, betInfo.InvitedTeam)
 	winnerId := uint(0)
-	if inviterArenaTeam.SeasonGames == gameStats.InviterSeasonGames {
-		return
+	if inviterArenaTeam.SeasonGames == betInfo.InviterSeasonGames {
+		return betInfo
 	} else {
-		if inviterArenaTeam.SeasonWins > gameStats.InviterSeasonWins &&
-			invitedArenaTeam.SeasonWins == gameStats.InvitedSeasonWins {
-			winnerId = uint(readyGame.InviterTeam)
-		} else if invitedArenaTeam.SeasonWins > gameStats.InvitedSeasonWins &&
-			inviterArenaTeam.SeasonWins == gameStats.InviterSeasonWins {
-			winnerId = uint(readyGame.InvitedTeam)
+		if inviterArenaTeam.SeasonWins > betInfo.InviterSeasonWins &&
+			invitedArenaTeam.SeasonWins == betInfo.InvitedSeasonWins {
+			winnerId = betInfo.InviterTeam
+		} else if invitedArenaTeam.SeasonWins > betInfo.InvitedSeasonWins &&
+			inviterArenaTeam.SeasonWins == betInfo.InviterSeasonWins {
+			winnerId = uint(betInfo.InvitedTeam)
 		}
 	}
 	if winnerId != 0 {
-		gameStats.Winner = winnerId
-		s.DB.Save(&gameStats)
-
+		betInfo.Winner = winnerId
+		betInfo.Step = GameFinished
+		s.DB.Save(&betInfo)
 		// prometheus
 		s.PP.Counters["bet_system_match_finished"].Inc()
 		s.PP.Gauges["bet_system_match_in_progress"].Add(-1)
 	}
+	return betInfo
 }

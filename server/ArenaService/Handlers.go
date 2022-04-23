@@ -96,15 +96,7 @@ func (s *Service) AcceptInvitation() gin.HandlerFunc {
 			return
 		}
 
-		err = CheckTeamRequest(s.DB, reqParams.Inviter, reqParams.Invited)
-		// should never happen
-		if err != nil {
-			c.JSON(http.StatusBadRequest, actionResult(-6, "error in parsing"))
-			LogService.LogPotentialCyberAttack(c, "ArenaService_Accept_Invitation_Request_Team_Check")
-			return
-		}
-
-		err = s.AcceptInvitationOperation(reqParams.Inviter, reqParams.Invited, getUsernameByArenaTeamID(s.DB, reqParams.Inviter))
+		err = s.AcceptInvitationOperation(reqParams.Inviter, reqParams.Invited)
 		if err != nil {
 			c.JSON(http.StatusBadGateway, actionResult(-1, "Service unavailable"))
 			LogService.LogCrash("MySql", "ArenaService_Accept_Invitation")
@@ -133,8 +125,8 @@ func (s *Service) StartGame() gin.HandlerFunc {
 			return
 		}
 
-		if !CheckIsAlreadyStarted(s.DB, s.Rdb, s.Context, uint(reqParams.Inviter)) ||
-			!CheckIsAlreadyStarted(s.DB, s.Rdb, s.Context, uint(reqParams.Invited)) {
+		if !CheckIsAlreadyStarted(s.DB, s.Rdb, s.Context, reqParams.Inviter) ||
+			!CheckIsAlreadyStarted(s.DB, s.Rdb, s.Context, reqParams.Invited) {
 			c.JSON(http.StatusOK, actionResult(0, "Team is already in another game queue"))
 		}
 
@@ -142,14 +134,14 @@ func (s *Service) StartGame() gin.HandlerFunc {
 			c.JSON(http.StatusOK, actionResult(0, "Team is already in another match"))
 		}
 
-		readyBucket, err := CheckTeamReady(s.DB, reqParams.Inviter, reqParams.Invited)
+		betInfo, err := CheckTeamReady(s.DB, reqParams.Inviter, reqParams.Invited)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, actionResult(-6, "error in parsing"))
 			LogService.LogPotentialCyberAttack(c, "ArenaService_Start_Game_Exist_Check")
 			return
 		}
 
-		err = s.StartGameOperation(readyBucket.ID)
+		err = s.StartGameOperation(betInfo.ID)
 		if err != nil {
 			c.JSON(http.StatusBadGateway, actionResult(-1, "Service unavailable"))
 			LogService.LogCrash("Rdb", "ArenaService_Accept_Invitation")
@@ -159,7 +151,7 @@ func (s *Service) StartGame() gin.HandlerFunc {
 		c.JSON(http.StatusOK, struct {
 			Status   int  `json:"status"`
 			BucketId uint `json:"bucket_id"`
-		}{Status: 1, BucketId: readyBucket.ID})
+		}{Status: 1, BucketId: betInfo.ID})
 	}
 }
 
@@ -179,10 +171,10 @@ func (s *Service) AcceptStartGame() gin.HandlerFunc {
 			LogService.LogPotentialCyberAttack(c, "ArenaService_Accept_Start_Game_Username_Check")
 			return
 		}
-		var readyTeam database.TeamReadyGames
-		readyTeam, err = CheckTeamReady(s.DB, reqParams.TeamID, reqParams.OpponentID)
+
+		betInfo, err := CheckTeamReady(s.DB, reqParams.TeamID, reqParams.OpponentID)
 		if err != nil {
-			readyTeam, err = CheckTeamReady(s.DB, reqParams.OpponentID, reqParams.TeamID)
+			betInfo, err = CheckTeamReady(s.DB, reqParams.OpponentID, reqParams.TeamID)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, actionResult(-10, "error in parsing"))
 				LogService.LogPotentialCyberAttack(c, "ArenaService_Accept_Start_Game_Bucket_Check")
@@ -190,13 +182,7 @@ func (s *Service) AcceptStartGame() gin.HandlerFunc {
 			}
 		}
 
-		if readyTeam.IsPlayed {
-			c.JSON(http.StatusBadRequest, actionResult(-21, "error in parsing"))
-			LogService.LogPotentialCyberAttack(c, "ArenaService_Accept_Start_Played_Bucket_Check")
-			return
-		}
-
-		err = s.StartGameAcceptHandler(readyTeam.ID, reqParams.TeamID)
+		err = s.StartGameAcceptHandler(betInfo.ID, reqParams.TeamID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, actionResult(-1, "Time is over!"))
 			return
@@ -237,27 +223,24 @@ func (s *Service) GetGameStatus() gin.HandlerFunc {
 				Result: "Joined Successfully!",
 			})
 		}
-
 	}
 }
 
 func (s *Service) GetResult() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		teamId := c.Param("team_id")
-		var inGameInfos []database.InGameTeamData
-		s.DB.Raw("SELECT * FROM `in_game_team_data` WHERE `in_game_team_data`.`bucket_id` IN " +
-			"(SELECT `team_ready_games`.`id` FROM `team_ready_games` WHERE " +
-			"`team_ready_games`.`inviter_team` = " + teamId + " OR " +
-			"`team_ready_games`.`invited_team` = " + teamId + ")").Find(&inGameInfos)
+		var inGameInfos []database.BetInfo
+		s.DB.Where("inviter_team = ? OR invited_team = ?", teamId, teamId).Find(&inGameInfos)
 
-		for _, inGameInfo := range inGameInfos {
-			if inGameInfo.Winner == 0 {
-				s.ProcessGame(inGameInfo.BucketID)
+		for i, inGameInfo := range inGameInfos {
+			if inGameInfo.Step == GameStarted {
+				inGameInfos[i] = s.ProcessGame(inGameInfo)
 			}
 		}
+
 		c.JSON(http.StatusOK, struct {
-			Status       int                       `json:"status"`
-			AllGamesInfo []database.InGameTeamData `json:"all_games_info"`
+			Status       int                `json:"status"`
+			AllGamesInfo []database.BetInfo `json:"all_games_info"`
 		}{Status: 1, AllGamesInfo: inGameInfos})
 	}
 }

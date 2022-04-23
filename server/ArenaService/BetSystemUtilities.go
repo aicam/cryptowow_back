@@ -6,14 +6,14 @@ import (
 	"strconv"
 )
 
-func getUsernameByArenaTeamID(DB *gorm.DB, teamID int) string {
+func getUsernameByArenaTeamID(DB *gorm.DB, teamID uint) string {
 	var accountID struct {
 		ID int `gorm:"column:account"`
 	}
 	err := DB.Clauses(dbresolver.Use("characters")).Raw(
 		"SELECT `characters`.`account` FROM `characters` WHERE `characters`.`guid` = " +
 			"(SELECT `arena_team`.`captainGuid` FROM `arena_team` " +
-			"WHERE `arena_team`.`arenaTeamId` = " + strconv.Itoa(teamID) + ")").
+			"WHERE `arena_team`.`arenaTeamId` = " + strconv.Itoa(int(teamID)) + ")").
 		First(&accountID).Error
 	if err != nil {
 		return ""
