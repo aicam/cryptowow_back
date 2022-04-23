@@ -1,10 +1,9 @@
 package main
 
 import (
-	"context"
-	"github.com/go-redis/redis/v8"
 	"github.com/prometheus/client_golang/prometheus"
 	"log"
+	"time"
 )
 
 type PrometheusParams struct {
@@ -19,19 +18,22 @@ func fuckError(e error) {
 }
 
 func main() {
-	cnt := context.Background()
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
+	//cnt := context.Background()
+	//rdb := redis.NewClient(&redis.Options{
+	//	Addr:     "localhost:6379",
+	//	Password: "", // no password set
+	//	DB:       0,  // use default DB
+	//})
 
 	//for i := 0; i < 50; i++ {
 	//	rdb.Set(cnt, strconv.Itoa(i + 20), "a", 100 * time.Second)
 	//}
-
-	res := rdb.Get(cnt, "v").Val()
-	log.Println(res)
+	n := time.Now()
+	time.Sleep(1001 * time.Millisecond)
+	n2 := time.Now()
+	log.Println(n2.Sub(n).Milliseconds())
+	//res := rdb.Get(cnt, "v").Val()
+	//log.Println(res)
 	//DB := database.DbSqlMigration("aicam:021021ali@tcp(127.0.0.1:3306)/cryptowow?charset=utf8mb4&parseTime=True")
 	//s := ArenaService.Service{
 	//	DB:      DB,

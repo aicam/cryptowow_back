@@ -57,6 +57,10 @@ func GetServerPrometheusParams() PrometheusParams {
 		Name: "bet_system_match_in_progress",
 		Help: "Number of matches are in progress currently",
 	})
-
+	// histograms
+	pp.Histograms["bet_system_invitation_request_response_duration"] = promauto.NewHistogram(prometheus.HistogramOpts{
+		Name: "bet_system_invitation_request_response_duration",
+		Help: "Response delay in invitation",
+	})
 	return pp
 }

@@ -30,12 +30,8 @@ func CheckBalance(DB *gorm.DB, username string, value float64, currency string) 
 
 func CheckQueueTeam(DB *gorm.DB, inviter, invited uint) error {
 	var queueTeam database.BetInfo
-	err := DB.Where("(inviter_team = ? AND invited_team = ?) AND (step = 0 OR step = 1)").First(&queueTeam).Error
-
-	if err != nil {
-		return err
-	}
-	return nil
+	return DB.Where("(inviter_team = ? AND invited_team = ?) AND (step = 0 OR step = 1)",
+		inviter, invited).First(&queueTeam).Error
 }
 
 func CheckTeamReady(DB *gorm.DB, inviter, invited uint) (database.BetInfo, error) {

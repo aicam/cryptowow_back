@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func actionResult(statusCode int, body string) struct {
@@ -20,6 +21,10 @@ func actionResult(statusCode int, body string) struct {
 
 func (s *Service) InviteTeam() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		/* check request time */
+		start := time.Now()
+		/* check request time */
+
 		username := c.GetHeader("username")
 		var reqParams InviteRequest
 		err := c.BindJSON(&reqParams)
@@ -70,6 +75,11 @@ func (s *Service) InviteTeam() gin.HandlerFunc {
 		s.InviteOperation(reqParams.Inviter, reqParams.Invited, invitedUsername, reqParams.BetAmount, reqParams.BetCurrency)
 		c.JSON(http.StatusOK, actionResult(1, "joined successfully"))
 		LogService.LogSucceedJoinOperation(username, invitedUsername)
+
+		/* check request time */
+		end := time.Now()
+		/* check request time */
+		s.PP.Histograms["bet_system_invitation_request_response_duration"].Observe(float64(end.Sub(start).Milliseconds()))
 	}
 }
 
