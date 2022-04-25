@@ -44,6 +44,10 @@ func GetServerPrometheusParams() PrometheusParams {
 		Name: "bet_system_match_finished",
 		Help: "Total number of matches finished",
 	})
+	pp.Counters["bet_system_declined"] = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "bet_system_declined",
+		Help: "Total number of declined bet in any step",
+	})
 	// gauges
 	pp.Gauges["bet_system_invite_operation_in_progress"] = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "bet_system_invite_operation_in_progress",

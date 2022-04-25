@@ -242,7 +242,7 @@ func (s *Service) GetResult() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		teamId := c.Param("team_id")
 		var inGameInfos []database.BetInfo
-		s.DB.Where("inviter_team = ? OR invited_team = ?", teamId, teamId).Find(&inGameInfos)
+		s.DB.Where("(inviter_team = ? OR invited_team = ?) AND (step NOT IN (3, 4))", teamId, teamId).Find(&inGameInfos)
 
 		for i, inGameInfo := range inGameInfos {
 			if inGameInfo.Step == GameStarted {

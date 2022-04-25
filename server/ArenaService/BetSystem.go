@@ -2,6 +2,7 @@ package ArenaService
 
 import (
 	"github.com/aicam/cryptowow_back/database"
+	"github.com/aicam/cryptowow_back/server/WalletService"
 	"os"
 	"strconv"
 	"time"
@@ -53,7 +54,6 @@ func (s *Service) StartGameOperation(bucketID uint) error {
 	}
 	// prometheus
 	s.PP.Counters["bet_system_start_game_operation_counter"].Inc()
-	s.PP.Gauges["bet_system_accept_operation_in_progress"].Add(-1)
 	return nil
 }
 
@@ -118,24 +118,54 @@ func (s *Service) ProcessGame(betInfo database.BetInfo) database.BetInfo {
 	inviterArenaTeam := getArenaTeamById(s.DB, betInfo.InviterTeam)
 	invitedArenaTeam := getArenaTeamById(s.DB, betInfo.InvitedTeam)
 	winnerId := uint(0)
+	var winnerUsername string
+	var loserUsername string
 	if inviterArenaTeam.SeasonGames == betInfo.InviterSeasonGames {
 		return betInfo
 	} else {
 		if inviterArenaTeam.SeasonWins > betInfo.InviterSeasonWins &&
 			invitedArenaTeam.SeasonWins == betInfo.InvitedSeasonWins {
 			winnerId = betInfo.InviterTeam
+			winnerUsername = betInfo.InviterUsername
+			loserUsername = betInfo.InvitedUsername
 		} else if invitedArenaTeam.SeasonWins > betInfo.InvitedSeasonWins &&
 			inviterArenaTeam.SeasonWins == betInfo.InviterSeasonWins {
 			winnerId = betInfo.InvitedTeam
+			winnerUsername = betInfo.InvitedUsername
+			loserUsername = betInfo.InviterUsername
 		}
 	}
 	if winnerId != 0 {
 		betInfo.Winner = winnerId
 		betInfo.Step = GameFinished
 		s.DB.Save(&betInfo)
+		err := WalletService.ReduceBalance(true, loserUsername, betInfo.Currency, betInfo.Amount, s.DB)
+		if err == nil {
+			WalletService.AddBalance(winnerUsername, betInfo.Currency, betInfo.Amount, s.DB)
+		}
+
 		// prometheus
 		s.PP.Counters["bet_system_match_finished"].Inc()
 		s.PP.Gauges["bet_system_match_in_progress"].Add(-1)
 	}
 	return betInfo
+}
+
+func (s *Service) DeclineBet(inviter, invited uint) {
+	var betInfo database.BetInfo
+	err := s.DB.Where(" (inviter_team = ? AND invited_team = ?) AND ( step != " + strconv.Itoa(int(DeclinedBet)) + " )").
+		First(&betInfo).Error
+	if err != nil {
+		return
+	}
+	betInfo.Step = DeclinedBet
+	s.DB.Save(&betInfo)
+
+	// prometheus
+	s.PP.Counters["bet_system_declined"].Inc()
+	if betInfo.Step == InvitationSent {
+		s.PP.Gauges["bet_system_invite_operation_in_progress"].Add(-1)
+	} else {
+		s.PP.Gauges["bet_system_accept_operation_in_progress"].Add(-1)
+	}
 }

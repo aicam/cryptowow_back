@@ -30,7 +30,7 @@ func CheckBalance(DB *gorm.DB, username string, value float64, currency string) 
 
 func CheckQueueTeam(DB *gorm.DB, inviter, invited uint) error {
 	var queueTeam database.BetInfo
-	return DB.Where("(inviter_team = ? AND invited_team = ?) AND (step = 0 OR step = 1)",
+	return DB.Where("(inviter_team = ? AND invited_team = ?) AND (step NOT IN (3, 4))",
 		inviter, invited).First(&queueTeam).Error
 }
 
@@ -68,7 +68,7 @@ func CheckSameArenaType(DB *gorm.DB, inviter, invited uint) uint8 {
 
 func CheckIsAlreadyStarted(DB *gorm.DB, rdb *redis.Client, ctx context.Context, teamID uint) bool {
 	var buckets []database.BetInfo
-	DB.Where("inviter_team = ? OR invited_team = ?", teamID, teamID).Find(&buckets)
+	DB.Where("(inviter_team = ? OR invited_team = ?) AND (step NOT IN (3, 4))", teamID, teamID).Find(&buckets)
 	for _, bucket := range buckets {
 		err := rdb.Get(ctx, strconv.Itoa(int(bucket.ID))).Err()
 		if err != redis.Nil {

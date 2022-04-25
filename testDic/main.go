@@ -1,9 +1,11 @@
 package main
 
 import (
+	"github.com/aicam/cryptowow_back/database"
+	"github.com/aicam/cryptowow_back/server/WalletService"
 	"github.com/prometheus/client_golang/prometheus"
 	"log"
-	"time"
+	"os"
 )
 
 type PrometheusParams struct {
@@ -24,14 +26,15 @@ func main() {
 	//	Password: "", // no password set
 	//	DB:       0,  // use default DB
 	//})
-
+	DBStruct := database.DbSqlMigration(os.Getenv("MYSQLCONNECTION"))
+	WalletService.GetArenaBetTotalDebt(DBStruct, "T6")
 	//for i := 0; i < 50; i++ {
 	//	rdb.Set(cnt, strconv.Itoa(i + 20), "a", 100 * time.Second)
 	//}
-	n := time.Now()
-	time.Sleep(1001 * time.Millisecond)
-	n2 := time.Now()
-	log.Println(n2.Sub(n).Milliseconds())
+	//n := time.Now()
+	//time.Sleep(1001 * time.Millisecond)
+	//n2 := time.Now()
+	//log.Println(n2.Sub(n).Milliseconds())
 	//res := rdb.Get(cnt, "v").Val()
 	//log.Println(res)
 	//DB := database.DbSqlMigration("aicam:021021ali@tcp(127.0.0.1:3306)/cryptowow?charset=utf8mb4&parseTime=True")

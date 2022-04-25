@@ -26,7 +26,7 @@ func AddBalance(username, currencyID string, amount float64, DB *gorm.DB) {
 	DB.Save(&wallet)
 }
 
-func ReduceBalance(username, currencyID string, amount float64, DB *gorm.DB) error {
+func ReduceBalance(isBet bool, username, currencyID string, amount float64, DB *gorm.DB) error {
 	var wallets []database.Wallet
 	DB.Where(&database.Wallet{Name: username}).Find(&wallets)
 	var wallet database.Wallet
@@ -35,12 +35,22 @@ func ReduceBalance(username, currencyID string, amount float64, DB *gorm.DB) err
 			wallet = wallets[i]
 		}
 	}
+
 	if (database.Wallet{}) == wallet {
 		return errors.New("Not enough balance")
 	}
 	if wallet.Amount < amount {
 		return errors.New("Not enough balance")
 	}
+
+	// check arena debt before allow reducing
+	if !isBet {
+		totalBetDebt := GetArenaBetTotalDebt(DB, username)
+		if wallet.Amount < amount+totalBetDebt[wallet.CurrencyID] {
+			return errors.New("You can not use arena bet money")
+		}
+	}
+
 	wallet.Amount -= amount
 	DB.Save(wallet)
 	return nil
@@ -67,7 +77,7 @@ func SetBuyHeroTransaction(username, vendorUsername, selectedCurrency, price str
 			priceVal, _ = strconv.ParseFloat(strings.Split(price, "-")[0], 32)
 		}
 	}
-	err := ReduceBalance(username, selectedCurrency, priceVal, DB)
+	err := ReduceBalance(false, username, selectedCurrency, priceVal, DB)
 	if err != nil {
 		return err
 	}

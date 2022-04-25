@@ -33,7 +33,7 @@ func (s *Server) AddCashOut() gin.HandlerFunc {
 		if err != nil {
 			return
 		}
-		err = WalletService.ReduceBalance(username, co.CurrencyID, co.Amount, s.DB)
+		err = WalletService.ReduceBalance(false, username, co.CurrencyID, co.Amount, s.DB)
 		if err != nil {
 			c.JSON(http.StatusOK, Response{
 				StatusCode: -1,
