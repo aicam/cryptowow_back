@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"github.com/aicam/cryptowow_back/Prometheus"
 	"github.com/aicam/cryptowow_back/database"
+	"github.com/aicam/cryptowow_back/prometheus"
 	"github.com/aicam/cryptowow_back/server/ArenaService"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
@@ -119,6 +119,6 @@ func NewServer() *Server {
 		}{Mounts: mounts, Companions: companions},
 		TrinityCoreBridgeVars: make(map[string]string),
 		TrinityCoreBridgeServer: ArenaService.Service{DB: DBStruct, Rdb: rdb, Context: context.Background(),
-			PP: Prometheus.GetServerPrometheusParams()},
+			PP: prometheus.GetServerPrometheusParams()},
 	}
 }
