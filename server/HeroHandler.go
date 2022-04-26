@@ -102,6 +102,7 @@ func (s *Server) RestoreHero() gin.HandlerFunc {
 			StatusCode: 1,
 			Body:       "Hero resotred successfully",
 		})
+		s.PP.Counters["Total_Restored_Heros"].Inc()
 	}
 }
 
@@ -143,6 +144,7 @@ func (s *Server) SellHero() gin.HandlerFunc {
 			c.JSON(http.StatusOK, actionResult(-1, "Hero is already for sale!"))
 			return
 		}
+		s.PP.Gauges["Number_Currently_Selling_Heros"].Inc()
 	}
 }
 

@@ -1,4 +1,4 @@
-package prometheus
+package monitoring
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
@@ -12,7 +12,40 @@ type PrometheusParams struct {
 	Summar     map[string]prometheus.Summary
 }
 
-func GetServerPrometheusParams() PrometheusParams {
+func GetGlobalPrometheusParams() PrometheusParams {
+	pp := PrometheusParams{
+		Counters:   make(map[string]prometheus.Counter),
+		Gauges:     make(map[string]prometheus.Gauge),
+		Histograms: make(map[string]prometheus.Histogram),
+		Summar:     make(map[string]prometheus.Summary),
+	}
+
+	// histograms
+	pp.Histograms["registration_process_time"] = promauto.NewHistogram(prometheus.HistogramOpts{
+		Name: "registration_process_time",
+		Help: "Time spent to register a new username",
+	})
+
+	// gauges
+	pp.Gauges["Number_Currently_Selling_Heros"] = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "Number_Currently_Selling_Heros",
+		Help: "Total number of heros are available to sell",
+	})
+
+	// counters
+	pp.Counters["Total_Successfull_Transactions"] = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "Total_Successfull_Transactions",
+		Help: "Total number of successfull transactions",
+	})
+	pp.Counters["Total_Restored_Heros"] = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "Total_Restored_Heros",
+		Help: "Total number of heros restored",
+	})
+
+	return pp
+}
+
+func GetArenaBetServicePrometheusParams() PrometheusParams {
 	pp := PrometheusParams{
 		Counters:   make(map[string]prometheus.Counter),
 		Gauges:     make(map[string]prometheus.Gauge),

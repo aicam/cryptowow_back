@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/aicam/cryptowow_back/GMReqs"
 	"github.com/aicam/cryptowow_back/database"
+	"github.com/aicam/cryptowow_back/server/LogService"
 	"github.com/aicam/cryptowow_back/server/WalletService"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -69,6 +70,10 @@ func (s *Server) ReturnUserInfo() gin.HandlerFunc {
 
 func (s *Server) AddUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		/* check request time */
+		start := time.Now()
+		/* check request time */
+
 		var newUser database.UsersData
 		var existUser database.UsersData
 		_ = c.BindJSON(&newUser)
@@ -124,15 +129,26 @@ func (s *Server) AddUser() gin.HandlerFunc {
 		log.Println(newUser.Password)
 
 		// Uncomment
-		GMReqs.CreateAccount(newUser.Username, newUser.Password)
-		newUser.Password = MD5(newUser.Password)
-		s.DB.Save(&newUser)
-		ipTrack.Checked = 1
-		s.DB.Save(&ipTrack)
-		c.JSON(http.StatusOK, Response{
-			StatusCode: 1,
-			Body:       "Added",
-		})
+		err := GMReqs.CreateAccount(newUser.Username, newUser.Password)
+		if err != nil {
+			c.JSON(http.StatusBadGateway, Response{
+				StatusCode: -1,
+				Body:       "Game server is currently closed!, try again later",
+			})
+		} else {
+			newUser.Password = MD5(newUser.Password)
+			s.DB.Save(&newUser)
+			ipTrack.Checked = 1
+			s.DB.Save(&ipTrack)
+			c.JSON(http.StatusOK, Response{
+				StatusCode: 1,
+				Body:       "Added",
+			})
+		}
+		/* check request time */
+		end := time.Now()
+		/* check request time */
+		s.PP.Histograms["registration_process_time"].Observe(float64(end.Sub(start).Nanoseconds()))
 	}
 }
 
@@ -180,6 +196,8 @@ func (s *Server) BuyHero() gin.HandlerFunc {
 			StatusCode: 1,
 			Body:       "Hero transferred to " + username + " account",
 		})
+
+		s.PP.Gauges["Number_Currently_Selling_Heros"].Add(-1)
 	}
 }
 
@@ -212,6 +230,7 @@ func (s *Server) AddTransaction() gin.HandlerFunc {
 				StatusCode: -20,
 				Body:       "Malicious activity detected! take care of your IP and token",
 			})
+			LogService.LogPotentialCyberAttack(c, "Add_Transaction")
 			return
 		}
 		tx.Username = username
@@ -221,6 +240,8 @@ func (s *Server) AddTransaction() gin.HandlerFunc {
 			StatusCode: 1,
 			Body:       "Transaction Done successfully",
 		})
+
+		s.PP.Counters["Total_Successfull_Transactions"].Inc()
 	}
 }
 
