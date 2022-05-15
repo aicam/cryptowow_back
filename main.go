@@ -12,7 +12,7 @@ import (
 func main() {
 	s := server.NewServer()
 	// check env
-	if s.TrinityCoreBridgeVars["ArenaFile"] = os.Getenv("CUSTOMARENAFILELOC"); s.TrinityCoreBridgeVars["ArenaFile"] == "" {
+	if s.TrinityCoreBridgeVars["ArenaFile"] = os.Getenv("ARENAFILEPATH"); s.TrinityCoreBridgeVars["ArenaFile"] == "" {
 		panic("CUSTOMARENAFILELOC environment variable not set!")
 	}
 	s.Routes()

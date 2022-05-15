@@ -55,7 +55,8 @@ func CORS() gin.HandlerFunc {
 func SetupLogger() {
 	loggerFile, e := os.OpenFile("Server_Logs.txt", os.O_APPEND|os.O_WRONLY, 0644)
 	if e != nil {
-		log.Fatal(e)
+		os.Create("Server_Logs.txt")
+		loggerFile, _ = os.OpenFile("Server_Logs.txt", os.O_APPEND|os.O_WRONLY, 0644)
 	}
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 	logrus.SetOutput(loggerFile)
