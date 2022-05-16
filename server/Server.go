@@ -68,7 +68,7 @@ func NewServer() *Server {
 	router := gin.Default()
 	// here we opened cors for all
 	router.Use(CORS())
-	jsonFile, err := os.Open("WoWUtils/mounts_info.json")
+	jsonFile, err := os.Open("./WoWUtils/mounts_info.json")
 	if err != nil {
 		log.Println(err)
 	}
@@ -85,7 +85,7 @@ func NewServer() *Server {
 		os.Exit(-1)
 	}
 
-	jsonFile, err = os.Open("WoWUtils/companions_info.json")
+	jsonFile, err = os.Open("./WoWUtils/companions_info.json")
 	if err != nil {
 		log.Println(err)
 	}
@@ -107,7 +107,7 @@ func NewServer() *Server {
 
 	// redis server
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     "cache:6379",
 		Password: os.Getenv("REDISPASS"), // no password set
 		DB:       0,                      // use default DB
 	})
