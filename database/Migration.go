@@ -144,9 +144,9 @@ func DbSqlMigration(url string) *gorm.DB {
 	// Bet
 	db.AutoMigrate(&BetInfo{})
 	err = db.Use(dbresolver.Register(dbresolver.Config{
-		Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "messenger_api", "characters", 1))}}, "characters").
+		Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "server?", "characters?", 1))}}, "characters").
 		Register(dbresolver.Config{
-			Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "messenger_api", "auth", 1))},
+			Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "server?", "auth?", 1))},
 		}, "auth"))
 	if err != nil {
 		log.Fatal(err)
