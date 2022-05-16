@@ -14,8 +14,6 @@ services:
         build: .
         ports:
             - 4300:4300
-        volumes:
-            - ./server:/go/src/github.com/aicam/cryptowow_back
         depends_on:
             - cache
         links:
