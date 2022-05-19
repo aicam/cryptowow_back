@@ -1,0 +1,5 @@
+deploy_docker:
+  script:
+    - docker stop cryptowowserver || true && docker rm cryptowowserver || true
+    - docker build -t cryptowowserver .
+    - docker run --network general_bridge -d --name cryptowowserver -p 4300:4300 cryptowowserver
