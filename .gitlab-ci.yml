@@ -3,4 +3,4 @@ deploy_docker:
     - go mod tidy || true
     - docker stop cryptowowserver || true && docker rm cryptowowserver || true
     - docker build -t cryptowowserver .
-    - docker run --network general_bridge -d --name cryptowowserver -p 4300:4300 cryptowowserver
+    - docker run --network general_bridge -d --name cryptowowserver -p 4300:4300 --restart always cryptowowserver
