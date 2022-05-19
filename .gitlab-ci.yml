@@ -1,6 +1,5 @@
 deploy_docker:
   script:
-    - go mod init
     - go mod tidy
     - docker stop cryptowowserver || true && docker rm cryptowowserver || true
     - docker build -t cryptowowserver .
