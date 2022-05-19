@@ -107,7 +107,7 @@ func NewServer() *Server {
 
 	// redis server
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "cache:6379",
+		Addr:     "redis_container:6379",
 		Password: os.Getenv("REDISPASS"), // no password set
 		DB:       0,                      // use default DB
 	})
