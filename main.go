@@ -30,7 +30,7 @@ func main() {
 		user.Password = server.MD5("ali")
 		s.DB.Save(&user)
 	}
-	err := http.ListenAndServe("127.0.0.1:4300", s.Router)
+	err := http.ListenAndServe("0.0.0.0:4300", s.Router)
 	if err != nil {
 		log.Print(err)
 	}
