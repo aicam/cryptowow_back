@@ -107,10 +107,14 @@ func NewServer() *Server {
 
 	// redis server
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "redis_container:6379",
+		Addr:     os.Getenv("REDISCONNECTION"),
 		Password: os.Getenv("REDISPASS"), // no password set
 		DB:       0,                      // use default DB
 	})
+	err = rdb.Set(context.Background(), "key", "value", 0).Err()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return &Server{
 		DB:     DBStruct,
