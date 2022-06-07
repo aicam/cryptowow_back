@@ -32,4 +32,6 @@ func (s *Server) Routes() {
 	s.Router.POST("/bet/start_game/", s.checkToken(), s.TrinityCoreBridgeServer.StartGame())
 	s.Router.POST("/bet/accept_start_game/", s.checkToken(), s.TrinityCoreBridgeServer.AcceptStartGame())
 	s.Router.GET("/bet/get_result/:team_id", s.checkToken(), s.TrinityCoreBridgeServer.GetResult())
+	// CashCors
+	s.Router.GET("/cashcors/:url", s.checkToken(), s.CashCorsReq())
 }
