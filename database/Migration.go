@@ -123,6 +123,22 @@ type BetInfo struct {
 	Winner             uint    `json:"winner"`
 }
 
+// Shop tables
+type ShopItems struct {
+	gorm.Model
+	ItemType   string  `json:"item_type"`
+	ItemID     string  `json:"mount_id"`
+	CurrencyID string  `json:"currency_id"`
+	Amount     float64 `json:"amount"`
+	NFT        bool    `json:"nft"`
+}
+type BoughtItems struct {
+	gorm.Model
+	ItemID   uint   `json:"item_id"`
+	Username string `json:"username"`
+	HeroName string `json:"hero_name"`
+}
+
 func DbSqlMigration(url string) *gorm.DB {
 	db, err := gorm.Open(mysql.Open(url), &gorm.Config{})
 	if err != nil {

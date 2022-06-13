@@ -20,7 +20,7 @@ var CASHPATH = "cashfiles/"
 
 func (s *Server) CashCorsReq() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		url := "https://www.wowhead.com/" + c.Param("url")
+		url := "https://www.wowhead.c77om/" + c.Param("url")
 		// File name can not contain specific characters so we hash the url to provide appropriate file name
 		cashFile := MD5(url) + ".txt"
 
