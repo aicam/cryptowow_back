@@ -32,3 +32,10 @@ func LogCrash(service, part string) {
 		"Part":    part,
 	}).Error("Crash in service")
 }
+
+func LogBadItemIDinShop(service, part string) {
+	logrus.WithFields(logrus.Fields{
+		"Service": service,
+		"Part":    part,
+	})
+}

@@ -132,6 +132,7 @@ type ShopItems struct {
 	Amount     float64 `json:"amount"`
 	NFT        bool    `json:"nft"`
 }
+
 type BoughtItems struct {
 	gorm.Model
 	ItemID   uint   `json:"item_id"`
