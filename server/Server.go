@@ -6,6 +6,7 @@ import (
 	"github.com/aicam/cryptowow_back/database"
 	"github.com/aicam/cryptowow_back/monitoring"
 	"github.com/aicam/cryptowow_back/server/ArenaService"
+	"github.com/aicam/cryptowow_back/server/ShopService"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/websocket"
@@ -29,9 +30,10 @@ type Server struct {
 		Mounts     MountsInfo
 		Companions CompanionsInfo
 	}
-	TrinityCoreBridgeVars   map[string]string
-	TrinityCoreBridgeServer ArenaService.Service
-	PP                      monitoring.PrometheusParams
+	TrinityCoreBridgeVars    map[string]string
+	TrinityCoreBridgeService ArenaService.Service
+	ShopService              ShopService.Service
+	PP                       monitoring.PrometheusParams
 }
 
 func CORS() gin.HandlerFunc {
@@ -125,7 +127,13 @@ func NewServer() *Server {
 		}{Mounts: mounts, Companions: companions},
 		PP:                    monitoring.GetGlobalPrometheusParams(),
 		TrinityCoreBridgeVars: make(map[string]string),
-		TrinityCoreBridgeServer: ArenaService.Service{DB: DBStruct, Rdb: rdb, Context: context.Background(),
-			PP: monitoring.GetArenaBetServicePrometheusParams()},
+		TrinityCoreBridgeService: ArenaService.Service{DB: DBStruct,
+			Rdb:     rdb,
+			Context: context.Background(),
+			PP:      monitoring.GetArenaBetServicePrometheusParams()},
+		ShopService: ShopService.Service{
+			DB: DBStruct,
+			PP: monitoring.GetShopPrometheusParams(),
+		},
 	}
 }

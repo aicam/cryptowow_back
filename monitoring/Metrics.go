@@ -101,3 +101,24 @@ func GetArenaBetServicePrometheusParams() PrometheusParams {
 	})
 	return pp
 }
+
+func GetShopPrometheusParams() PrometheusParams {
+	pp := PrometheusParams{
+		Counters:   make(map[string]prometheus.Counter),
+		Gauges:     make(map[string]prometheus.Gauge),
+		Histograms: make(map[string]prometheus.Histogram),
+		Summar:     make(map[string]prometheus.Summary),
+	}
+
+	pp.Counters["shop_service_item_sold_count"] = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "shop_service_item_sold_count",
+		Help: "Total number of items sold",
+	})
+
+	pp.Histograms["shop_service_item_sold_by_id"] = promauto.NewHistogram(prometheus.HistogramOpts{
+		Name: "shop_service_item_sold_by_id",
+		Help: "Id of all items sold",
+	})
+
+	return pp
+}

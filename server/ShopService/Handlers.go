@@ -7,6 +7,7 @@ import (
 	"github.com/aicam/cryptowow_back/server/WalletService"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 func (s *Service) BuyItem() gin.HandlerFunc {
@@ -38,6 +39,33 @@ func (s *Service) BuyItem() gin.HandlerFunc {
 		}
 
 		GMReqs.AddItems("Shop order", "Your shopping order is delivered", req.HeroName, item.ItemID)
+
+		var boughtItems database.BoughtItems
+		boughtItems.ItemID = req.ItemID
+		boughtItems.HeroName = req.HeroName
+		boughtItems.Username = username
+		s.DB.Save(&boughtItems)
+
 		c.JSON(http.StatusOK, actionResult(1, "Item sent by mail to hero successfully!"))
+
+		itemId, _ := strconv.Atoi(item.ItemID)
+		s.PP.Histograms["shop_service_item_sold_by_id"].Observe(float64(itemId))
+		s.PP.Counters["shop_service_item_sold_count"].Inc()
+	}
+}
+
+func (s *Service) AddItemToShop() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req database.ShopItems
+		s.DB.Save(&req)
+		c.JSON(http.StatusOK, actionResult(1, "Added successfully!"))
+	}
+}
+
+func (s *Service) GetShopItems() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var items []database.ShopItems
+		s.DB.Find(&items)
+		c.JSON(http.StatusOK, actionResult(1, items))
 	}
 }

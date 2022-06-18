@@ -27,11 +27,15 @@ func (s *Server) Routes() {
 	// Gifts
 	s.Router.GET("/gift/:gift_id/:hero_name", s.checkToken(), s.GiftHandler())
 	// Bet arena join
-	s.Router.POST("/bet/arena_invite/", s.checkToken(), s.TrinityCoreBridgeServer.InviteTeam())
-	s.Router.POST("/bet/arena_accept/", s.checkToken(), s.TrinityCoreBridgeServer.AcceptInvitation())
-	s.Router.POST("/bet/start_game/", s.checkToken(), s.TrinityCoreBridgeServer.StartGame())
-	s.Router.POST("/bet/accept_start_game/", s.checkToken(), s.TrinityCoreBridgeServer.AcceptStartGame())
-	s.Router.GET("/bet/get_result/:team_id", s.checkToken(), s.TrinityCoreBridgeServer.GetResult())
+	s.Router.POST("/bet/arena_invite/", s.checkToken(), s.TrinityCoreBridgeService.InviteTeam())
+	s.Router.POST("/bet/arena_accept/", s.checkToken(), s.TrinityCoreBridgeService.AcceptInvitation())
+	s.Router.POST("/bet/start_game/", s.checkToken(), s.TrinityCoreBridgeService.StartGame())
+	s.Router.POST("/bet/accept_start_game/", s.checkToken(), s.TrinityCoreBridgeService.AcceptStartGame())
+	s.Router.GET("/bet/get_result/:team_id", s.checkToken(), s.TrinityCoreBridgeService.GetResult())
 	// CashCors
 	s.Router.GET("/cashcors/:url", s.checkToken(), s.CashCorsReq())
+	// Shop routes
+	s.Router.POST("/shop/purchase/", s.checkToken(), s.ShopService.BuyItem())
+	s.Router.POST("/shop/add_item/", s.checkToken(), s.ShopService.AddItemToShop())
+	s.Router.GET("/shop/list", s.checkToken(), s.ShopService.GetShopItems())
 }

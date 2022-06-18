@@ -8,13 +8,13 @@ import (
 	"net/http"
 )
 
-func actionResult(statusCode int, body string) struct {
-	Status int    `json:"status"`
-	Body   string `json:"body"`
+func actionResult(statusCode int, body interface{}) struct {
+	Status int         `json:"status"`
+	Body   interface{} `json:"body"`
 } {
 	return struct {
-		Status int    `json:"status"`
-		Body   string `json:"body"`
+		Status int         `json:"status"`
+		Body   interface{} `json:"body"`
 	}{Status: statusCode, Body: body}
 }
 

@@ -30,6 +30,7 @@ type UsersData struct {
 	Password string `json:"password"`
 	Wallet   string `json:"wallet"`
 	WalletID string `json:"wallet_id"`
+	Role     string `json:"role"`
 }
 
 type Gifts struct {
@@ -136,7 +137,7 @@ type ShopItems struct {
 
 type BoughtItems struct {
 	gorm.Model
-	ItemID   uint   `json:"item_id"`
+	ItemID   string `json:"item_id"`
 	Username string `json:"username"`
 	HeroName string `json:"hero_name"`
 }
