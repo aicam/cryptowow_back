@@ -131,6 +131,7 @@ type ShopItems struct {
 	CurrencyID string  `json:"currency_id"`
 	Amount     float64 `json:"amount"`
 	NFT        bool    `json:"nft"`
+	NFTOwner   string  `json:"nft_owner"`
 }
 
 type BoughtItems struct {

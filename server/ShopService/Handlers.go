@@ -1,8 +1,10 @@
 package ShopService
 
 import (
+	"github.com/aicam/cryptowow_back/GMReqs"
 	"github.com/aicam/cryptowow_back/database"
 	"github.com/aicam/cryptowow_back/server/LogService"
+	"github.com/aicam/cryptowow_back/server/WalletService"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -25,8 +27,17 @@ func (s *Service) BuyItem() gin.HandlerFunc {
 
 		if err != nil {
 			c.JSON(http.StatusBadRequest, actionResult(-3, "Wrong request!"))
-			LogService.LogBadItemIDinShop("Buy Item", "ItemID in database check")
+			LogService.LogCrashinShop("Buy Item", "ItemID in database check")
 		}
 
+		err = WalletService.ReduceBalance(false, username, item.CurrencyID, item.Amount, s.DB)
+
+		if err != nil {
+			c.JSON(http.StatusOK, actionResult(-3, "Not enough balance!"))
+			LogService.LogCrashinShop("Buy Item", "Not enough balance")
+		}
+
+		GMReqs.AddItems("Shop order", "Your shopping order is delivered", req.HeroName, item.ItemID)
+		c.JSON(http.StatusOK, actionResult(1, "Item sent by mail to hero successfully!"))
 	}
 }
