@@ -1,12 +1,25 @@
 package ShopService
 
 import (
-	"github.com/aicam/cryptowow_back/server"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
 	"net/http"
 )
+
+type Hero struct {
+	AccountID  int    `json:"account_id" gorm:"column:account"`
+	HeroID     int    `json:"hero_id" gorm:"column:guid"`
+	Name       string `json:"name"`
+	Race       uint   `json:"race"`
+	Gender     bool   `json:"gender"`
+	Level      int    `json:"level"`
+	Class      int    `json:"class"`
+	Online     bool   `json:"online"`
+	Money      int    `json:"money"`
+	TotalTime  int    `json:"total_time" gorm:"column:totaltime"`
+	TotalKills int    `json:"total_kills" gorm:"column:totalKills"`
+}
 
 func actionResult(statusCode int, body interface{}) struct {
 	Status int         `json:"status"`
@@ -18,8 +31,8 @@ func actionResult(statusCode int, body interface{}) struct {
 	}{Status: statusCode, Body: body}
 }
 
-func checkHeroIsAllowed(c *gin.Context, DB *gorm.DB, heroName string, username string) (server.Hero, bool) {
-	var hero server.Hero
+func checkHeroIsAllowed(c *gin.Context, DB *gorm.DB, heroName string, username string) (Hero, bool) {
+	var hero Hero
 	var accID int
 	DB.Clauses(dbresolver.Use("auth")).Raw("SELECT id FROM account WHERE username='" + username + "'").Scan(&accID)
 
