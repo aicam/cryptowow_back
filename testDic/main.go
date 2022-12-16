@@ -26,7 +26,7 @@ func main() {
 	//	Password: "", // no password set
 	//	DB:       0,  // use default DB
 	//})
-	DBStruct := database.DbSqlMigration(os.Getenv("MYSQLCONNECTION"))
+	DBStruct := database.DbSqlMigration(os.Getenv("MAINMYSQLCONNECTION"))
 	WalletService.GetArenaBetTotalDebt(DBStruct, "T6")
 	//for i := 0; i < 50; i++ {
 	//	rdb.Set(cnt, strconv.Itoa(i + 20), "a", 100 * time.Second)

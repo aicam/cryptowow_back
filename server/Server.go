@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/aicam/cryptowow_back/database"
 	"github.com/aicam/cryptowow_back/monitoring"
+	"github.com/aicam/cryptowow_back/server/AdminRouter"
 	"github.com/aicam/cryptowow_back/server/ArenaService"
 	"github.com/aicam/cryptowow_back/server/ShopService"
 	"github.com/gin-gonic/gin"
@@ -33,6 +34,7 @@ type Server struct {
 	TrinityCoreBridgeVars    map[string]string
 	TrinityCoreBridgeService ArenaService.Service
 	ShopService              ShopService.Service
+	AdminRouter              AdminRouter.Service
 	PP                       monitoring.PrometheusParams
 }
 
@@ -104,8 +106,8 @@ func NewServer() *Server {
 	}
 
 	// generate database gorm structure
-	log.Println(os.Getenv("MYSQLCONNECTION"))
-	DBStruct := database.DbSqlMigration(os.Getenv("MYSQLCONNECTION"))
+	log.Println(os.Getenv("MAINMYSQLCONNECTION"))
+	DBStruct := database.DbSqlMigration(os.Getenv("MAINMYSQLCONNECTION"))
 
 	// redis server
 	rdb := redis.NewClient(&redis.Options{
@@ -134,6 +136,10 @@ func NewServer() *Server {
 		ShopService: ShopService.Service{
 			DB: DBStruct,
 			PP: monitoring.GetShopPrometheusParams(),
+		},
+		AdminRouter: AdminRouter.Service{
+			DB: DBStruct,
+			PP: monitoring.GetAdminPrometheusParams(),
 		},
 	}
 }

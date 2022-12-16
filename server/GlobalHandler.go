@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/hex"
 	"errors"
-	"github.com/aicam/cryptowow_back/GMReqs"
 	"github.com/aicam/cryptowow_back/database"
 	"github.com/aicam/cryptowow_back/server/LogService"
 	"github.com/aicam/cryptowow_back/server/WalletService"
@@ -26,13 +25,13 @@ func (s *Server) AvailableWallets() gin.HandlerFunc {
 	}
 }
 
-func (s *Server) ReturnUserInfo() gin.HandlerFunc {
+func (s *Server) GetUserInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		username := c.GetHeader("username")
 		var id int
 		s.DB.Clauses(dbresolver.Use("auth")).Raw("SELECT id from account WHERE username='" + strings.ToUpper(username) + "'").Scan(&id)
 		var heros []Hero
-		s.DB.Raw("SELECT guid, name, race, gender, level, class FROM characters WHERE account=" + strconv.Itoa(id)).Scan(&heros)
+		s.DB.Clauses(dbresolver.Use("characters")).Raw("SELECT guid, name, race, gender, level, class FROM characters WHERE account=" + strconv.Itoa(id)).Scan(&heros)
 
 		var sellingHeros []database.SellingHeros
 		s.DB.Where(&database.SellingHeros{Username: username}).Find(&sellingHeros)
@@ -129,7 +128,9 @@ func (s *Server) AddUser() gin.HandlerFunc {
 		log.Println(newUser.Password)
 
 		// Uncomment
-		err := GMReqs.CreateAccount(newUser.Username, newUser.Password)
+		//err := GMReqs.CreateAccount(newUser.Username, newUser.Password)
+		var err error
+		err = nil
 		if err != nil {
 			c.JSON(http.StatusBadGateway, Response{
 				StatusCode: -1,

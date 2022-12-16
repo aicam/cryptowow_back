@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
 	"log"
-	"strings"
+	"os"
 	"time"
 )
 
@@ -162,11 +162,11 @@ func DbSqlMigration(url string) *gorm.DB {
 	db.AutoMigrate(&CashOutRequest{})
 	// Bet
 	db.AutoMigrate(&BetInfo{})
-	err = db.Use(dbresolver.Register(dbresolver.Config{
-		Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "server?", "characters?", 1))}}, "characters").
+	err = db.Use(dbresolver.
 		Register(dbresolver.Config{
-			Sources: []gorm.Dialector{mysql.Open(strings.Replace(url, "server?", "auth?", 1))},
-		}, "auth"))
+			Sources: []gorm.Dialector{mysql.Open(os.Getenv("CHARACTERSMYSQLCONNECTION"))}}, "characters").
+		Register(dbresolver.Config{
+			Sources: []gorm.Dialector{mysql.Open(os.Getenv("AUTHMYSQLCONNECTION"))}}, "auth"))
 	if err != nil {
 		log.Fatal(err)
 	}

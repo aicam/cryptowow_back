@@ -122,3 +122,19 @@ func GetShopPrometheusParams() PrometheusParams {
 
 	return pp
 }
+
+func GetAdminPrometheusParams() PrometheusParams {
+	pp := PrometheusParams{
+		Counters:   make(map[string]prometheus.Counter),
+		Gauges:     make(map[string]prometheus.Gauge),
+		Histograms: make(map[string]prometheus.Histogram),
+		Summar:     make(map[string]prometheus.Summary),
+	}
+
+	pp.Counters["admin_service_balance_added_count"] = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "admin_service_balance_added_count",
+		Help: "Total number add balance request is called",
+	})
+
+	return pp
+}

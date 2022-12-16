@@ -10,7 +10,7 @@ func (s *Server) Routes() {
 	s.Router.GET("/events", s.ReturnEvents())
 	s.Router.GET("/get_available_wallets", s.checkToken(), s.AvailableWallets())
 	// Login required (WoW DB)
-	s.Router.GET("/wow/get_info", s.checkToken(), s.ReturnUserInfo())
+	s.Router.GET("/wow/get_info", s.checkToken(), s.GetUserInfo())
 	s.Router.GET("/wow/hero_info/:hero_name", s.checkToken(), s.GetHeroInfo())
 	s.Router.GET("/wow/restore_hero/:hero_name", s.checkToken(), s.RestoreHero())
 	// Hero selling functionality
@@ -38,4 +38,7 @@ func (s *Server) Routes() {
 	s.Router.POST("/shop/purchase/", s.checkToken(), s.ShopService.BuyItem())
 	s.Router.POST("/shop/add_item/", s.checkToken(), s.ShopService.AddItemToShop())
 	s.Router.GET("/shop/list", s.checkToken(), s.ShopService.GetShopItems())
+	// Admin routes
+	// Level 1
+	s.AdminRouter.AddRoutes(s.Router, s.checkToken)
 }
