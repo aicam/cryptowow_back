@@ -13,8 +13,15 @@ type Hero struct {
 	TotalTime         int              `json:"total_time" gorm:"column:totaltime"`
 	TotalKills        int              `json:"total_kills" gorm:"column:totalKills"`
 	ArenaTeamsCaptain []HeroArenaTeams `gorm:"-"`
+	InventoryItems    []InventoryItem  `json:"inventoryItems" gorm:"-"`
 }
-
+type InventoryItem struct {
+	ItemId       uint   `json:"item_id" gorm:"column:guid"`
+	ItemEntry    uint   `json:"item_entry" gorm:"column:itemEntry"`
+	Charges      string `json:"charges" gorm:"column:charges"`
+	Enchantments string `json:"enchantments" gorm:"column:enchantments"`
+	Text         string `json:"text" gorm:"column:text"`
+}
 type HeroArenaTeams struct {
 	TeamId          uint   `json:"team_id" gorm:"column:arenaTeamId"`
 	Name            string `json:"name" gorm:"column:name"`

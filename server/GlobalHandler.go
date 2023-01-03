@@ -53,6 +53,14 @@ func (s *Server) GetUserInfo() gin.HandlerFunc {
 			heros[i].ArenaTeamsCaptain = arenaTeams
 		}
 
+		// get inventory items
+		for i, hero := range heros {
+			items := []InventoryItem{}
+			s.DB.Clauses(dbresolver.Use("characters")).Raw("SELECT i.guid, i.itemEntry, i.charges, i.enchantments, i.text" +
+				" FROM item_instance i, character_inventory c WHERE i.guid = c.item AND c.guid = " + strconv.Itoa(hero.HeroID)).Find(&items)
+			heros[i].InventoryItems = items
+		}
+
 		c.JSON(http.StatusOK, Response{
 			StatusCode: 1,
 			Body: struct {

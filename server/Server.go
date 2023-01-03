@@ -108,7 +108,6 @@ func NewServer() *Server {
 	// generate database gorm structure
 	log.Println(os.Getenv("MAINMYSQLCONNECTION"))
 	DBStruct := database.DbSqlMigration(os.Getenv("MAINMYSQLCONNECTION"))
-
 	// redis server
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     os.Getenv("REDISCONNECTION"),
