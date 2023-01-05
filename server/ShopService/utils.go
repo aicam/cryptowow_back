@@ -35,9 +35,62 @@ func checkHeroIsAllowed(c *gin.Context, DB *gorm.DB, heroName string, username s
 	return hero, true
 }
 
-func findFirstEmptySlotInBag(DB *gorm.DB, heroId uint) []CharacterInventory {
+func makeRange(min, max int) []int {
+	a := make([]int, max-min+1)
+	for i := range a {
+		a[i] = min + i
+	}
+	return a
+}
+
+func (s *Service) findFirstEmptySlotInBag(heroId uint) (int, int) {
+
 	var charInventories []CharacterInventory
-	DB.Clauses(dbresolver.Use("characters")).Raw("SELECT bag, slot, item FROM character_inventory WHERE guid=" + strconv.Itoa(int(heroId))).Find(&charInventories)
-	return charInventories
+	s.DB.Clauses(dbresolver.Use("characters")).Raw("SELECT bag, slot, item FROM character_inventory WHERE guid=" + strconv.Itoa(int(heroId))).Find(&charInventories)
+
+	charInventoriesMap := make(map[BagRow]int)
+	for _, inv := range charInventories {
+		charInventoriesMap[BagRow{
+			Bag:  inv.Bag,
+			Slot: inv.Slot,
+		}] = inv.ItemId
+	}
+
+	// check backpack slots
+	for _, i := range makeRange(s.BagsInfo.BackPackStart, s.BagsInfo.BackPackEnd) {
+		_, ok := charInventoriesMap[BagRow{
+			Bag:  0,
+			Slot: i,
+		}]
+		if !ok {
+			return 0, i
+		}
+	}
+
+	// fill bags info
+	charBags := make(map[int]int)
+	for _, i := range makeRange(s.BagsInfo.BagSlotsStart, s.BagsInfo.BagSlotsEnd) {
+		item, ok := charInventoriesMap[BagRow{
+			Bag:  0,
+			Slot: i,
+		}]
+		if ok {
+			charBags[item] = s.BagItems[item]
+		}
+	}
+
+	// check bag slots
+	for bag, maxSlot := range charBags {
+		for _, i := range makeRange(0, maxSlot) {
+			_, ok := charInventoriesMap[BagRow{
+				Bag:  bag,
+				Slot: i,
+			}]
+			if !ok {
+				return bag, i
+			}
+		}
+	}
+	return 0, 0
 
 }

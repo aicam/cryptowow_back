@@ -72,6 +72,10 @@ func (s *Service) GetShopItems() gin.HandlerFunc {
 
 func (s *Service) TempTest() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.JSON(http.StatusOK, findFirstEmptySlotInBag(s.DB, 1))
+		bag, slot := s.findFirstEmptySlotInBag(1)
+		if bag == 0 && slot == 0 {
+			c.JSON(http.StatusOK, actionResult(-1, "No empty slot found"))
+			return
+		}
 	}
 }

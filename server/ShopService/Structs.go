@@ -22,7 +22,12 @@ type Hero struct {
 }
 
 type CharacterInventory struct {
-	Bag    uint `json:"bag" gorm:"column:bag"`
-	Slot   uint `json:"slot" gorm:"column:slot"`
-	ItemId uint `json:"itemId" gorm:"column:item"`
+	Bag    int `json:"bag" gorm:"column:bag"`
+	Slot   int `json:"slot" gorm:"column:slot"`
+	ItemId int `json:"itemId" gorm:"column:item"`
+}
+
+type BagRow struct {
+	Bag  int
+	Slot int
 }

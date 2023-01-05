@@ -2,11 +2,6 @@ FROM golang:1.16-alpine
 
 WORKDIR /go/src/github.com/aicam/cryptowow_back
 
-ENV MYSQLCONNECTION root:021021ali@tcp(mysqlserver_container:3306)/server?charset=utf8mb4&parseTime=True
-ENV REDISPASS 021021ali
-ENV ARENAFILEPATH /test
-ENV REDISCONNECTION redis_container:6379
-
 COPY go.mod ./
 COPY go.sum ./
 

@@ -2,18 +2,17 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/aicam/cryptowow_back/database"
 	"github.com/aicam/cryptowow_back/monitoring"
 	"github.com/aicam/cryptowow_back/server/AdminRouter"
 	"github.com/aicam/cryptowow_back/server/ArenaService"
+	"github.com/aicam/cryptowow_back/server/GlobalStructs"
 	"github.com/aicam/cryptowow_back/server/ShopService"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
-	"io/ioutil"
 	"log"
 	"os"
 )
@@ -30,6 +29,7 @@ type Server struct {
 	WoWInfo          struct {
 		Mounts     MountsInfo
 		Companions CompanionsInfo
+		Bags       GlobalStructs.BagsInfo
 	}
 	TrinityCoreBridgeVars    map[string]string
 	TrinityCoreBridgeService ArenaService.Service
@@ -72,38 +72,9 @@ func NewServer() *Server {
 	router := gin.Default()
 	// here we opened cors for all
 	router.Use(CORS())
-	jsonFile, err := os.Open("./WoWUtils/mounts_info.json")
-	if err != nil {
-		log.Println(err)
-	}
-	// TODO: clean up reading files
-	// defer the closing of our jsonFile so that we can parse it later on
-	defer jsonFile.Close()
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-
-	var mounts MountsInfo
-	err = json.Unmarshal(byteValue, &mounts)
-
-	if err != nil {
-		log.Print(err)
-		os.Exit(-1)
-	}
-
-	jsonFile, err = os.Open("./WoWUtils/companions_info.json")
-	if err != nil {
-		log.Println(err)
-	}
-	// defer the closing of our jsonFile so that we can parse it later on
-	defer jsonFile.Close()
-	byteValue, _ = ioutil.ReadAll(jsonFile)
-
-	var companions CompanionsInfo
-	err = json.Unmarshal(byteValue, &companions)
-
-	if err != nil {
-		log.Print(err)
-		os.Exit(-1)
-	}
+	companions := parseCompanions("./WoWUtils/companions_info.json")
+	bags := parseBags("./WoWUtils/bags_info.json")
+	mounts := parseMounts("./WoWUtils/mounts_info.json")
 
 	// generate database gorm structure
 	log.Println(os.Getenv("MAINMYSQLCONNECTION"))
@@ -114,7 +85,7 @@ func NewServer() *Server {
 		Password: os.Getenv("REDISPASS"), // no password set
 		DB:       0,                      // use default DB
 	})
-	err = rdb.Set(context.Background(), "key", "value", 0).Err()
+	err := rdb.Set(context.Background(), "key", "value", 0).Err()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -125,17 +96,19 @@ func NewServer() *Server {
 		WoWInfo: struct {
 			Mounts     MountsInfo
 			Companions CompanionsInfo
-		}{Mounts: mounts, Companions: companions},
+			Bags       GlobalStructs.BagsInfo
+		}{Mounts: mounts, Companions: companions, Bags: bags},
 		PP:                    monitoring.GetGlobalPrometheusParams(),
 		TrinityCoreBridgeVars: make(map[string]string),
 		TrinityCoreBridgeService: ArenaService.Service{DB: DBStruct,
 			Rdb:     rdb,
 			Context: context.Background(),
 			PP:      monitoring.GetArenaBetServicePrometheusParams()},
-		ShopService: ShopService.Service{
-			DB: DBStruct,
-			PP: monitoring.GetShopPrometheusParams(),
-		},
+		ShopService: ShopService.NewService(
+			DBStruct,
+			monitoring.GetShopPrometheusParams(),
+			bags,
+		),
 		AdminRouter: AdminRouter.Service{
 			DB: DBStruct,
 			PP: monitoring.GetAdminPrometheusParams(),

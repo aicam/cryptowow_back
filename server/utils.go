@@ -9,10 +9,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"github.com/aicam/cryptowow_back/server/GlobalStructs"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
 func tokenize(secret, salt string) string {
@@ -217,4 +219,61 @@ func DesDecrypt(src, key []byte) ([]byte, error) {
 	out = ZeroUnPadding(out)
 	// out = PKCS5UnPadding(out)
 	return out, nil
+}
+
+func parseMounts(filePath string) MountsInfo {
+	jsonFile, err := os.Open(filePath)
+	if err != nil {
+		log.Println(err)
+	}
+	var mounts MountsInfo
+	// defer the closing of our jsonFile so that we can parse it later on
+	defer jsonFile.Close()
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	err = json.Unmarshal(byteValue, &mounts)
+
+	if err != nil {
+		log.Println("Failed in unmarshal")
+		log.Print(err)
+		os.Exit(-1)
+	}
+	return mounts
+}
+
+func parseCompanions(filePath string) CompanionsInfo {
+	jsonFile, err := os.Open(filePath)
+	if err != nil {
+		log.Println(err)
+	}
+	var companions CompanionsInfo
+	// defer the closing of our jsonFile so that we can parse it later on
+	defer jsonFile.Close()
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	err = json.Unmarshal(byteValue, &companions)
+
+	if err != nil {
+		log.Println("Failed in unmarshal")
+		log.Print(err)
+		os.Exit(-1)
+	}
+	return companions
+}
+
+func parseBags(filePath string) GlobalStructs.BagsInfo {
+	jsonFile, err := os.Open(filePath)
+	if err != nil {
+		log.Println(err)
+	}
+	var bags GlobalStructs.BagsInfo
+	// defer the closing of our jsonFile so that we can parse it later on
+	defer jsonFile.Close()
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	err = json.Unmarshal(byteValue, &bags)
+
+	if err != nil {
+		log.Println("Failed in unmarshal")
+		log.Print(err)
+		os.Exit(-1)
+	}
+	return bags
 }
