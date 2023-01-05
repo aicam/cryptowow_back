@@ -69,3 +69,9 @@ func (s *Service) GetShopItems() gin.HandlerFunc {
 		c.JSON(http.StatusOK, actionResult(1, items))
 	}
 }
+
+func (s *Service) TempTest() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.JSON(http.StatusOK, findFirstEmptySlotInBag(s.DB, 1))
+	}
+}

@@ -38,6 +38,7 @@ func (s *Server) Routes() {
 	s.Router.POST("/shop/purchase/", s.checkToken(), s.ShopService.BuyItem())
 	s.Router.POST("/shop/add_item/", s.checkToken(), s.ShopService.AddItemToShop())
 	s.Router.GET("/shop/list", s.checkToken(), s.ShopService.GetShopItems())
+	s.Router.GET("/tmp", s.ShopService.TempTest())
 	// Admin routes
 	// Level 1
 	s.AdminRouter.AddRoutes(s.Router, s.checkToken)

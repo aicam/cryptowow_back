@@ -15,6 +15,7 @@ type Hero struct {
 	ArenaTeamsCaptain []HeroArenaTeams `gorm:"-"`
 	InventoryItems    []InventoryItem  `json:"inventoryItems" gorm:"-"`
 }
+
 type InventoryItem struct {
 	ItemId       uint   `json:"item_id" gorm:"column:guid"`
 	ItemEntry    uint   `json:"item_entry" gorm:"column:itemEntry"`
@@ -22,6 +23,7 @@ type InventoryItem struct {
 	Enchantments string `json:"enchantments" gorm:"column:enchantments"`
 	Text         string `json:"text" gorm:"column:text"`
 }
+
 type HeroArenaTeams struct {
 	TeamId          uint   `json:"team_id" gorm:"column:arenaTeamId"`
 	Name            string `json:"name" gorm:"column:name"`

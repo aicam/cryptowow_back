@@ -5,21 +5,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
 	"net/http"
+	"strconv"
 )
-
-type Hero struct {
-	AccountID  int    `json:"account_id" gorm:"column:account"`
-	HeroID     int    `json:"hero_id" gorm:"column:guid"`
-	Name       string `json:"name"`
-	Race       uint   `json:"race"`
-	Gender     bool   `json:"gender"`
-	Level      int    `json:"level"`
-	Class      int    `json:"class"`
-	Online     bool   `json:"online"`
-	Money      int    `json:"money"`
-	TotalTime  int    `json:"total_time" gorm:"column:totaltime"`
-	TotalKills int    `json:"total_kills" gorm:"column:totalKills"`
-}
 
 func actionResult(statusCode int, body interface{}) struct {
 	Status int         `json:"status"`
@@ -46,4 +33,11 @@ func checkHeroIsAllowed(c *gin.Context, DB *gorm.DB, heroName string, username s
 		return hero, false
 	}
 	return hero, true
+}
+
+func findFirstEmptySlotInBag(DB *gorm.DB, heroId uint) []CharacterInventory {
+	var charInventories []CharacterInventory
+	DB.Clauses(dbresolver.Use("characters")).Raw("SELECT bag, slot, item FROM character_inventory WHERE guid=" + strconv.Itoa(int(heroId))).Find(&charInventories)
+	return charInventories
+
 }

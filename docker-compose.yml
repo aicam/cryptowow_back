@@ -1,0 +1,40 @@
+version: '3.7'
+services:
+  app:
+    container_name: decentrawow
+    build: .
+    ports:
+      - 4300:4300
+    restart: on-failure
+    volumes:
+      - .:/go/src/github.com/aicam/cryptowow_back/
+    command:
+      - /go/src/github.com/aicam/cryptowow_back/build
+    depends_on:
+      - redis
+    env_file:
+      - test.env
+    networks:
+      - dece
+#  mysql:
+#    container_name: decentrawow_mysql
+#    image: mysql:8.0.29
+#    ports:
+#      - 3307:3306
+#    environment:
+#      - MYSQL_USER=aicam
+#      - MYSQL_PASSWORD=021021ali
+#      - MYSQL_ROOT_PASSWORD=021021ali
+#      - DATABASE_HOST=${MYSQL_HOST}
+#    volumes:
+#      - MySQL/data:/var/lib/mysql
+#      - MySQL/dbs:/docker-entrypoint-initdb.d
+  redis:
+    container_name: decentrawow_redis
+    image: redis:latest
+    networks:
+      - dece
+
+networks:
+  dece:
+    driver: bridge
